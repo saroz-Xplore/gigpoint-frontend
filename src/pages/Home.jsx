@@ -8,11 +8,7 @@ import {
   FaEdit,
   FaUsers,
   FaCheckCircle,
-  FaUser,
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
+
 } from "react-icons/fa";
 
 const ServiceCard = ({ Icon, title, description }) => (
@@ -28,8 +24,8 @@ const ServiceCard = ({ Icon, title, description }) => (
 );
 
 const HowItWorksStep = ({ Icon, step, title, description }) => (
-  <div className="how-it-works-step bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center transition-colors duration-300 hover:bg-primary-600 hover:text-white cursor-pointer">
-    <div className="step-icon bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-primary-600 hover:text-white">
+  <div className="how-it-works-step bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center transition-colors duration-300 hover:bg-primary-600 hover:text-black cursor-pointer">
+    <div className="step-icon bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-primary-600 text-blue-600 hover:text-blue">
       <Icon className="text-2xl" />
     </div>
     <h3 className="text-xl font-semibold mb-2">{step}. {title}</h3>
@@ -88,7 +84,7 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <a
                 href="#"
-                className="px-6 py-3 bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 text-center"
+                className="px-6 py-3 bg-primary-600 text-black rounded-md font-medium hover:bg-primary-700 text-center"
               >
                 Post a Job
               </a>
@@ -102,7 +98,7 @@ const HomePage = () => {
           </div>
           <div className="md:w-1/2 flex justify-center">
             <img
-              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80"
+              src="https://plus.unsplash.com/premium_photo-1678766819262-cdc490bfd0d1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fG5lcGFsaSUyMGVsZWN0cmljaWFuJTIwd29ya2luZ3xlbnwwfHwwfHx8MA%3D%3D"
               alt="Home service professional"
               className="rounded-lg shadow-xl max-w-full h-auto"
             />
@@ -111,33 +107,55 @@ const HomePage = () => {
       </section>
 
       {/* Services Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Popular Services</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <ServiceCard
-              Icon={FaFaucet}
-              title="Plumbing"
-              description="Fix leaks, install fixtures, and solve all your plumbing issues with certified professionals."
-            />
-            <ServiceCard
-              Icon={FaBolt}
-              title="Electrical"
-              description="Wiring, installations, repairs - our electricians handle all your electrical needs safely."
-            />
-            <ServiceCard
-              Icon={FaHammer}
-              title="Carpentry"
-              description="Custom furniture, repairs, installations - skilled carpenters for all woodwork needs."
-            />
-            <ServiceCard
-              Icon={FaBroom}
-              title="Cleaning"
-              description="Deep cleaning, regular maintenance, move-in/move-out services by professional cleaners."
-            />
-          </div>
+     <section className="py-16 bg-gray-50">
+  <div className="container mx-auto px-4">
+    <h2 className="text-3xl font-bold text-center mb-12">Popular Services</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <div className="service-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div className="h-48 bg-primary-100 flex items-center justify-center">
+          <FaFaucet className="text-6xl text-blue-600" />
         </div>
-      </section>
+        <div className="p-6 text-center">
+          <h3 className="text-xl font-semibold mb-2">Plumbing</h3>
+          <p className="text-gray-600 mb-4">Fix leaks, install fixtures, and solve all your plumbing issues with certified professionals.</p>
+        </div>
+      </div>
+
+      <div className="service-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div className="h-48 bg-primary-100 flex items-center justify-center">
+          <FaBolt className="text-6xl text-blue-600" />
+        </div>
+        <div className="p-6 text-center">
+          <h3 className="text-xl font-semibold mb-2">Electrical</h3>
+          <p className="text-gray-600 mb-4">Wiring, installations, repairs - our electricians handle all your electrical needs safely.</p>
+        </div>
+      </div>
+
+      <div className="service-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div className="h-48 bg-primary-100 flex items-center justify-center">
+          <FaHammer className="text-6xl text-blue-600" />
+        </div>
+        <div className="p-6 text-center">
+          <h3 className="text-xl font-semibold mb-2">Carpentry</h3>
+          <p className="text-gray-600 mb-4">Custom furniture, repairs, installations - skilled carpenters for all woodwork needs.</p>
+        </div>
+      </div>
+
+      <div className="service-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div className="h-48 bg-primary-100 flex items-center justify-center">
+          <FaBroom className="text-6xl text-blue-600" />
+        </div>
+        <div className="p-6 text-center">
+          <h3 className="text-xl font-semibold mb-2">Cleaning</h3>
+          <p className="text-gray-600 mb-4">Deep cleaning, regular maintenance, move-in/move-out services by professional cleaners.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 
       {/* How It Works Section */}
       <section className="py-16">
@@ -169,14 +187,14 @@ const HomePage = () => {
      
 
       {/* CTA Section */}
-      <section className="py-16 bg-primary-600 text-white">
+      <section className="py-16 bg-primary-600 text-black">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Solve Your Home Problems?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Join thousands of satisfied customers who found the perfect professionals for their home service needs.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <a href="#" className="px-8 py-3 bg-white text-primary-600 rounded-md font-bold hover:bg-gray-100">
+            <a href="#" className="px-8 py-3 bg-white text-primary-600 rounded-md font-bold hover:bg-gray-100 ml-44">
               Post a Job - It's Free
             </a>
             <a href="#" className="px-8 py-3 border border-white text-white rounded-md font-bold hover:bg-primary-700">
