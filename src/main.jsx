@@ -4,8 +4,8 @@ import './index.css'
 import  RootLayout  from './Layout/RootLayout.jsx'
 import HomePage from './pages/Home'
 import { createRoot } from 'react-dom/client'
-import { About } from './pages/About.jsx'
-import { Account } from './pages/Account.jsx'
+import AboutPage from './pages/About.jsx'
+import  Dashboard  from './pages/Dashboard.jsx'
 
 const router = createBrowserRouter([
   {
@@ -18,11 +18,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <About />
+        element: <AboutPage/>
       },
       {
         path: "/dashboard",
-        element: <Account />
+        element: <Dashboard />
       },
     ]
   }

@@ -63,7 +63,17 @@ const NavigationLinks = () => (
       About Us
     </NavLink>
 
-    <AccountDropdown />
+    {/* Replaced Dropdown with Simple Link */}
+    <NavLink
+      to="/dashboard"
+      className={({ isActive }) =>
+        isActive
+          ? 'text-blue-600 font-medium'
+          : 'text-gray-700 hover:text-blue-600 font-medium'
+      }
+    >
+      Dashboard
+    </NavLink>
 
     <NavLink
       to="/login"
@@ -80,27 +90,5 @@ const NavigationLinks = () => (
   </nav>
 );
 
-const AccountDropdown = () => (
-  <div className="relative group">
-    <button className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium">
-      <span>Account</span>
-      <i className="fas fa-chevron-down text-xs"></i>
-    </button>
-    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
-      <NavLink
-        to="/dashboard"
-        className={({ isActive }) =>
-          `block px-4 py-2 text-sm ${
-            isActive
-              ? 'bg-blue-50 text-blue-600'
-              : 'hover:bg-blue-50 text-gray-700'
-          }`
-        }
-      >
-        Dashboard
-      </NavLink>
-    </div>
-  </div>
-);
 
 export default Header;
