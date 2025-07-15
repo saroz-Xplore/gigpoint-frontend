@@ -1,17 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 
 const Header = () => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-
           <Logo />
           <SearchBar />
-
           <NavigationLinks />
-
         </div>
       </div>
     </header>
@@ -20,8 +17,10 @@ const Header = () => {
 
 const Logo = () => (
   <Link to="/" className="flex items-center space-x-2">
-    <i className="fas fa-bolt text-blue-600 text-2xl"></i>
-    <span className="text-xl font-bold text-blue-600">GigPoint</span>
+    <i className="fas fa-bolt text-blue-600 text-3xl"></i>
+    <span className="text-2xl font-extrabold text-blue-600 tracking-wide font-serif">
+      GigPoint
+    </span>
   </Link>
 );
 
@@ -42,12 +41,42 @@ const SearchBar = () => (
 
 const NavigationLinks = () => (
   <nav className="hidden md:flex items-center space-x-12">
-    <Link to="/home" className="text-gray-700 hover:text-blue-600 font-medium">Home</Link>
-    <Link to="/how-it-works" className="text-gray-700 hover:text-blue-600 font-medium">How It Works</Link>
+    <NavLink
+      to="/"
+      className={({ isActive }) =>
+        isActive
+          ? 'text-blue-600 font-medium'
+          : 'text-gray-700 hover:text-blue-600 font-medium'
+      }
+    >
+      Home
+    </NavLink>
+
+    <NavLink
+      to="/about"
+      className={({ isActive }) =>
+        isActive
+          ? 'text-blue-600 font-medium'
+          : 'text-gray-700 hover:text-blue-600 font-medium'
+      }
+    >
+      About Us
+    </NavLink>
+
     <AccountDropdown />
-    <Link to="/login" className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition font-medium">
-      Login/Signup
-    </Link>
+
+    <NavLink
+      to="/login"
+      className={({ isActive }) =>
+        `px-4 py-2 rounded-full font-medium transition ${
+          isActive
+            ? 'bg-blue-700 text-white'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+        }`
+      }
+    >
+      Login
+    </NavLink>
   </nav>
 );
 
@@ -58,7 +87,18 @@ const AccountDropdown = () => (
       <i className="fas fa-chevron-down text-xs"></i>
     </button>
     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
-      <Link to="/dashboard" className="block px-4 py-2 text-sm hover:bg-blue-50 text-gray-700">Dashboard</Link>
+      <NavLink
+        to="/dashboard"
+        className={({ isActive }) =>
+          `block px-4 py-2 text-sm ${
+            isActive
+              ? 'bg-blue-50 text-blue-600'
+              : 'hover:bg-blue-50 text-gray-700'
+          }`
+        }
+      >
+        Dashboard
+      </NavLink>
     </div>
   </div>
 );

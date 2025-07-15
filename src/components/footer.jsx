@@ -30,7 +30,7 @@ const Footer = () => {
               <FaTools className="mr-2 text-blue-600" /> GigPoint
             </h3>
             <p className="text-gray-400 leading-relaxed">
-              Get your jobs done hiring skilled workers according to your choice. Serving since 2025.
+              Get your jobs done hiring skilled workers according to your choice.
             </p>
           </div>
 
@@ -74,8 +74,8 @@ const Footer = () => {
 
         </div>
 
-        <div className="mt-10 border-t border-gray-800 pt-6 text-center text-gray-400 relative">
-          <p>&copy; {new Date().getFullYear()} GigPoint. All rights reserved.</p>
+        <div className="mt-12 border-t border-gray-500 pt-2 text-center text-gray-400 relative">
+          <p>&copy; {new Date().getFullYear()} GigPoint. All rights reserved. <br/>Serving since 2025.</p>
 
           {showScrollTop && (
             <button
