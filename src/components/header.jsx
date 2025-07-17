@@ -6,7 +6,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Close mobile menu whenever route changes
+  
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);

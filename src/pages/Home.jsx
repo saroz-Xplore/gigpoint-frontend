@@ -12,7 +12,7 @@ import {
 const ServiceCard = ({ Icon, title, description }) => (
   <div className="service-card bg-white rounded-lg overflow-hidden shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
     <div className="h-48 bg-primary-100 flex items-center justify-center">
-      <Icon className="text-6xl text-blue-600" />   {/* Blue Icon */}
+      <Icon className="text-6xl text-blue-600" />  
     </div>
     <div className="p-6">
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
@@ -25,7 +25,7 @@ const ServiceCard = ({ Icon, title, description }) => (
 const HowItWorksStep = ({ Icon, step, title, description }) => (
   <div className="how-it-works-step bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
     <div className="step-icon bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-      <Icon className="text-2xl text-blue-600" />   {/* Blue Icon */}
+      <Icon className="text-2xl text-blue-600" />  
     </div>
     <h3 className="text-xl font-semibold mb-2">{step}. {title}</h3>
     <p>{description}</p>
@@ -37,7 +37,7 @@ const HomePage = () => {
   return (
     <div className="font-sans text-black bg-white">
 
-      {/* Hero Section */}
+      
       <section
         className="hero-section py-16"
         style={{
@@ -82,7 +82,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Services Section */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Popular Services</h2>
@@ -113,7 +112,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
+    
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">How GigPoint Works</h2>
@@ -142,7 +141,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      
       <section className="py-16 bg-primary-600 text-black">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Solve Your Home Problems?</h2>

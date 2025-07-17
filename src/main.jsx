@@ -6,6 +6,7 @@ import HomePage from './pages/Home'
 import { createRoot } from 'react-dom/client'
 import AboutPage from './pages/About.jsx'
 import  Dashboard  from './pages/Dashboard.jsx'
+import LoginPage from './pages/LoginPage.jsx'
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <Dashboard />
+      },
+      {
+        path: "/login",
+        element: <LoginPage />
       },
     ]
   }
