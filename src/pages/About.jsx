@@ -19,6 +19,7 @@ import {
 import { SiTailwindcss } from "react-icons/si";
 import Slideshow from "../components/Slideshow";
 
+
 const AboutPage = () => {
   return (
     <div className="bg-white font-sans">
@@ -138,7 +139,7 @@ const AboutPage = () => {
             name="Ayush Pandey"
             role="Backend Developer"
             github="https://github.com/ayusclg"
-            imgSrc="ayush.jpg" // Replace with your actual image path
+            imgSrc="ayush.jpg"
             description="Built secure and efficient backend APIs using Node.js, Express, and MongoDB."
             lightTheme
           />

@@ -7,18 +7,42 @@ const LoginPage = () => {
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
+  const validateEmail = (email) => {
+    // Simple email regex
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleGoogleSignup = () => {
-    window.location.href = "https://accounts.google.com/signup";
+    window.location.href = "http://localhost:3000/api/v1/oauth/google";
   };
 
   const handleWorkerLogin = () => {
-    navigate("/worker-dashboard");
+    let errors = {};
+    if (!email) {
+      errors.email = "Email is required";
+    } else if (!validateEmail(email)) {
+      errors.email = "Invalid email address";
+    }
+
+    if (!password) {
+      errors.password = "Password is required";
+    } else if (password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(errors);
+
+    if (Object.keys(errors).length === 0) {
+      // Proceed with login logic or navigation
+      navigate("/worker-dashboard");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-t from-blue-300 via-white to-blue-200 flex items-center justify-center px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-blue-400 py-4">
           <h2 className="text-2xl font-bold text-center text-white">Welcome to Gigpoint</h2>
@@ -79,16 +103,22 @@ const LoginPage = () => {
                 placeholder="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full mb-3 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full mb-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  errors.email ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                }`}
               />
+              {errors.email && <p className="text-red-500 text-sm mb-2">{errors.email}</p>}
 
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full mb-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  errors.password ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-400"
+                }`}
               />
+              {errors.password && <p className="text-red-500 text-sm mb-2">{errors.password}</p>}
 
               <button
                 onClick={handleWorkerLogin}
@@ -101,7 +131,7 @@ const LoginPage = () => {
                 No account?{" "}
                 <span
                   className="text-blue-600 font-semibold cursor-pointer hover:underline"
-                  onClick={() => alert("Redirect to signup page")}
+                  onClick={() => navigate("/worker-signup")}
                 >
                   Sign up
                 </span>
