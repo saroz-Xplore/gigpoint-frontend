@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client'
 import AboutPage from './pages/About.jsx'
 import  Dashboard  from './pages/Dashboard.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import  WorkerSignup  from './pages/WorkerSignup.jsx'
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: "/login",
         element: <LoginPage />
+      },
+      {
+        path: "/worker-signup",
+        element: <WorkerSignup />
       },
     ]
   }

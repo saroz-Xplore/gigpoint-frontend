@@ -1,33 +1,54 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
 
 const Dashboard = () => {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const handleSignupClick = () => {
+    if (!email.trim()) {
+      setError("*Please enter an email");
+    } else if (!validateEmail(email)) {
+      setError("*Please enter a valid email");
+    } else {
+      setError("");
+      window.location.href = "https://accounts.google.com/signup";
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-700">Please login to continue</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+    <div className="min-h-screen bg-gradient-to-t from-blue-300 via-white to-blue-200 flex items-center justify-center px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600 font-serif">
+          Join GigPoint Now
+        </h2>
 
-        <button className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition mb-2">
-          Login
-        </button>
+        {/* Input and Button in Row */}
+        <div className="flex items-center space-x-3">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={`flex-1 px-5 py-3 border rounded-lg focus:outline-none focus:ring-2 bg-gray-50 text-blue-700 font-medium 
+              ${error ? 'border-red-400 focus:ring-red-400' : 'border-blue-200 focus:ring-blue-300'}
+            `}
+          />
 
-        <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
-          Sign Up
-        </button>
+          <button
+            onClick={handleSignupClick}
+            className="bg-blue-400 hover:bg-blue-500 transition text-white px-5 py-3 rounded-lg font-semibold shadow"
+          >
+            Sign Up
+          </button>
+        </div>
 
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Not registered? <Link to="/signup" className="text-blue-600 hover:underline">Sign Up here</Link>
-        </p>
+        {error && (
+          <p className="mt-3 text-red-500 font-medium text-sm">{error}</p>
+        )}
       </div>
     </div>
   );
