@@ -286,7 +286,7 @@ const WorkerSignup = () => {
           <p className="text-center text-xs text-gray-500 mt-1">
             Already have an account?{" "}
             <span
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login?role=worker")} 
               className="text-blue-600 font-semibold cursor-pointer hover:underline"
             >
               Login here
