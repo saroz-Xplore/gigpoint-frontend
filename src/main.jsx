@@ -14,6 +14,8 @@ import UserContextProvider from './context/UserContextProvider.jsx'
 import WorkerDashboard from './pages/WorkerDashboard.jsx'
 import GoogleCallbackHandler from './pages/GoogleCallBackHandler.jsx'
 import ProtectedRoute from './pages/ProtectedRoute.jsx'
+import WorkerProfileUpdate from './components/WorkerProfileUpdate.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
 
 
 
@@ -65,6 +67,15 @@ const router = createBrowserRouter([
       {
         path: "/oauth-success",
         element: <GoogleCallbackHandler />
+      },
+    
+      {
+        path: "/update-profile",
+        element: <WorkerProfileUpdate />
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />
       },
     
     ]
