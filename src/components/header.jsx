@@ -1,7 +1,7 @@
 // Header.jsx
 import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
-import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
+import { FaBars, FaTimes, FaHome, FaInfoCircle, FaUserCircle } from "react-icons/fa";
 import { useUser } from "../context/UserContextProvider.jsx";
 
 const Header = () => {
@@ -86,48 +86,32 @@ const SearchBar = () => (
 );
 
 const NavigationLinks = ({ user, handleLogout, isMobile }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const navigate = useNavigate();
 
-  const loggedOutLinks = [
+  const dashboardPath = user?.role === "worker" ? "/worker-dashboard" : "/user-dashboard";
+
+  const links = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About Us" },
-    { to: "/dashboard", label: "Dashboard" },
-  ];
-
-  const loggedInLinks = [
-    { to: "/dashboard", label: "Dashboard", icon: <FaUserCircle /> },
+    { to: user ? dashboardPath : "/login", label: "Dashboard" },
   ];
 
   return (
     <nav className={`flex ${isMobile ? "flex-col space-y-3 px-2" : "space-x-12 items-center"}`}>
-      {!user
-        ? loggedOutLinks.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                isActive
-                  ? "text-blue-600 font-medium"
-                  : "text-gray-700 hover:text-blue-600 font-medium"
-              }
-            >
-              {label}
-            </NavLink>
-          ))
-        : loggedInLinks.map(({ to, label, icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                isActive
-                  ? "text-blue-600 font-medium flex items-center space-x-1"
-                  : "text-gray-700 hover:text-blue-600 font-medium flex items-center space-x-1"
-              }
-            >
-              {icon}
-              <span>{label}</span>
-            </NavLink>
-          ))}
+      {links.map(({ to, label }) => (
+        <NavLink
+          key={to}
+          to={to}
+          className={({ isActive }) =>
+            (isActive
+              ? "text-blue-600 font-medium flex items-center space-x-1"
+              : "text-gray-700 hover:text-blue-600 font-medium flex items-center space-x-1")
+          }
+        >
+          <span>{label}</span>
+        </NavLink>
+      ))}
 
       {user ? (
         <div className="relative">
@@ -139,11 +123,11 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute bg-white shadow-md rounded border mt-2 right-0 w-40 z-50">
+            <div className="absolute bg-white shadow-md rounded border mt-2 right-0 w-44 z-50">
               <button
                 onClick={() => {
                   setDropdownOpen(false);
-                  alert("Update Profile");
+                  navigate("/update-profile");
                 }}
                 className="w-full text-left px-4 py-2 hover:bg-indigo-100"
               >
@@ -176,5 +160,6 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
     </nav>
   );
 };
+
 
 export default Header;
