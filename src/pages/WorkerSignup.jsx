@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const backendUrl = import.meta.env.VITE_BASE_URL;
+
 const WorkerSignup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -21,7 +23,7 @@ const WorkerSignup = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  const API_URL = "http://127.0.0.1:3000/api/v1/auth/create";
+  const API_URL = `${backendUrl}auth/create`;
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^[0-9]{10}$/.test(phone);
@@ -77,18 +79,15 @@ const WorkerSignup = () => {
     else if (!validatePhone(formData.phoneNo)) errors.phoneNo = "Invalid number";
     if (formData.skills.length === 0) errors.skills = "Add at least one skill";
     if (!formData.gender) errors.gender = "Select gender";
-    if (!formData.experienceYear || Number(formData.experienceYear) < 1) {
+    if (!formData.experienceYear || Number(formData.experienceYear) < 1)
       errors.experienceYear = "Minimum 1 year required";
-    }
     if (!profilePicture) errors.profilePicture = "Profile picture required";
 
     setErrors(errors);
-
     if (Object.keys(errors).length !== 0) return;
 
     try {
       setLoading(true);
-
       const payload = new FormData();
       payload.append("fullName", formData.fullName);
       payload.append("email", formData.email);
@@ -98,11 +97,7 @@ const WorkerSignup = () => {
       payload.append("experienceYear", formData.experienceYear);
       payload.append("gender", formData.gender);
       payload.append("role", formData.role);
-
-      formData.skills.forEach((skill) => {
-        payload.append("skills", skill);   // send skills as array elements
-      });
-
+      payload.append("skills", JSON.stringify(formData.skills)); // 👈 send as array
       payload.append("profilePicture", profilePicture);
 
       const response = await fetch(API_URL, {
@@ -211,8 +206,7 @@ const WorkerSignup = () => {
               <button
                 type="button"
                 onClick={handleAddSkill}
-                aria-label="Add skill"
-                className="bg-blue-700 hover:bg-blue-800 text-white px-3 rounded-lg text-lg font-bold leading-none select-none"
+                className="bg-blue-700 hover:bg-blue-800 text-white px-3 rounded-lg text-lg font-bold"
                 disabled={loading}
               >
                 +
@@ -230,7 +224,6 @@ const WorkerSignup = () => {
                     type="button"
                     onClick={() => handleRemoveSkill(skill)}
                     className="text-blue-600 hover:text-blue-900 font-bold"
-                    aria-label={`Remove skill ${skill}`}
                     disabled={loading}
                   >
                     &times;
@@ -286,7 +279,7 @@ const WorkerSignup = () => {
           <p className="text-center text-xs text-gray-500 mt-1">
             Already have an account?{" "}
             <span
-              onClick={() => navigate("/login?role=worker")} 
+              onClick={() => navigate("/login?role=worker")}
               className="text-blue-600 font-semibold cursor-pointer hover:underline"
             >
               Login here

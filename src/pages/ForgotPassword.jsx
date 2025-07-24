@@ -3,6 +3,9 @@ import { FaEnvelope, FaKey, FaLock } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const backendUrl = import.meta.env.VITE_BASE_URL
+console.log(backendUrl);
+
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -19,7 +22,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:3000/api/v1/auth/forgotPassword", {
+      const res = await fetch(`${backendUrl}auth/forgotPassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -38,7 +41,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:3000/api/v1/auth/verifyOtp", {
+      const res = await fetch(`${backendUrl}auth/verifyOtp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -64,7 +67,7 @@ const ForgotPassword = () => {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:3000/api/v1/auth/resetPassword", {
+    const res = await fetch(`${backendUrl}auth/resetPassword`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp, newPassword }), // Only newPassword is sent
@@ -181,7 +184,7 @@ const ForgotPassword = () => {
       disabled={loading}
       className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
     >
-      {loading ? "Resetting..." : "Reset Password"}
+      {loading ? "Resetting..." : "Reset Password"} 
     </button>
 
     <button

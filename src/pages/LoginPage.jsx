@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaTools } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { useUser } from "../context/UserContextProvider.jsx";
+import { useUser } from "../context/UserContextProvider.jsx"; 
+
+const backendUrl = import.meta.env.VITE_BASE_URL
+console.log(backendUrl);
 
 const LoginPage = () => {
   const [role, setRole] = useState("");
@@ -23,7 +26,7 @@ const LoginPage = () => {
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:3000/api/v1/oauth/google";
+    window.location.href = `${backendUrl}oauth/google`;
   };
 
   const handleWorkerLogin = async () => {
@@ -39,7 +42,7 @@ const LoginPage = () => {
 
     if (Object.keys(errors).length === 0) {
       try {
-        const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+        const response = await fetch(`${backendUrl}auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
@@ -48,7 +51,6 @@ const LoginPage = () => {
         const data = await response.json();
 
         if (response.ok) {
-          // Still using localStorage here; you can adapt this to your context setup if needed
           localStorage.setItem("accessToken", data.data.accessToken);
           setUser({ fullName: data.data.fullName || "Worker", role: "worker" }); 
           navigate("/worker-dashboard");
