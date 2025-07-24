@@ -7,7 +7,7 @@ const UserDashboard = () => {
 
   useEffect(() => {
     // Fetch logged-in user info
-    fetch("/api/v1/auth/my", {
+    fetch(`${backend}auth/my`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
     })
       .then((res) => res.json())
@@ -15,7 +15,7 @@ const UserDashboard = () => {
       .catch(() => setUser(null));
 
     // Fetch workers
-    fetch("/api/v1/workers?page=1&perPage=10", {
+    fetch(`${backendUrl}workers?page=1&perPage=10`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
     })
       .then((res) => res.json())

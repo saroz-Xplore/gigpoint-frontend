@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContextProvider.jsx";
 
+const backendUrl = import.meta.env.VITE_BASE_URL
+console.log(backendUrl);
+
 const OAuthHandler = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ const OAuthHandler = () => {
 
         try {
    
-          const response = await fetch("http://localhost:3000/api/v1/auth/my", {
+          const response = await fetch(`${backendUrl}auth/my`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
