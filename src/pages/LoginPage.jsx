@@ -51,6 +51,7 @@ const LoginPage = () => {
         const data = await response.json();
 
         if (response.ok) {
+
           localStorage.setItem("accessToken", data.data.accessToken);
           setUser({ fullName: data.data.fullName || "Worker", role: "worker" }); 
           navigate("/worker-dashboard");
