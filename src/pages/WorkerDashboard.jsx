@@ -43,7 +43,7 @@ const WorkerDashboard = () => {
           </div>
           <div>
             <i className="fas fa-phone mr-2"></i>
-            {worker?.phoneNo || "N/A"}
+            {worker?.phoneNo}
           </div>
           
         </div>
