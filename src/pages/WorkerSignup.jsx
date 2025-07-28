@@ -92,7 +92,7 @@ const WorkerSignup = () => {
       payload.append("email", formData.email);
       payload.append("password", formData.password);
       payload.append("address", formData.address);
-      payload.append("phoneNo", formData.phoneNo);
+      payload.append("phoneNo", formData.phoneNo.trim());
       payload.append("experienceYear", formData.experienceYear);
       payload.append("gender", formData.gender);
       payload.append("role", formData.role);

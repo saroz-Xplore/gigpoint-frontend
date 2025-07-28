@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+const backendUrl = import.meta.env.VITE_BASE_URL
+
 const UserContext = createContext();
 
 export const UserContextProvider = ({ children }) => {
@@ -7,33 +9,18 @@ export const UserContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
  useEffect(() => {
-  const token = localStorage.getItem("accessToken");
-
-  if (token) {
-    fetch("http://localhost:3000/api/v1/auth/my", {
-      headers: { Authorization: `Bearer ${token}` },
+  fetch(`${backendUrl}auth/my`, {
+    method: "GET",
+    credentials: "include",
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data?.data) setUser(data.data);
+      else setUser(null);
     })
-      .then(res => res.json())
-      .then(data => {
-        console.log("User API Response:", data);
-
-        if (data?.data) {
-          setUser(data.data);   // ✅ Set the logged-in user
-        } else {
-          localStorage.removeItem("accessToken");
-          setUser(null);        // ✅ Clear session on failure
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem("accessToken");
-        setUser(null);
-      })
-      .finally(() => setLoading(false));  // ✅ Important to unblock ProtectedRoute
-  } else {
-    setLoading(false);  // ✅ No token → stop loading
-  }
+    .catch(() => setUser(null))
+    .finally(() => setLoading(false));
 }, []);
-
 
   return (
     <UserContext.Provider value={{ user, setUser, loading }}>

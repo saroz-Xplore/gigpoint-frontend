@@ -1,36 +1,40 @@
 import { useState, useEffect, useRef } from "react";
 
+const backendUrl = import.meta.env.VITE_BASE_URL
+
 const UserDashboard = () => {
   const [user, setUser] = useState(null);
   const [workers, setWorkers] = useState([]);
   const dropdownRef = useRef();
 
   useEffect(() => {
-    // Fetch logged-in user info
-    fetch(`${backend}auth/my`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setUser(data.data))
-      .catch(() => setUser(null));
+  fetch(`${backend}auth/my`, {
+    credentials: "include",
+  })
+    .then((res) => res.json())
+    .then((data) => setUser(data.data))
+    .catch(() => setUser(null));
 
-    // Fetch workers
-    fetch(`${backendUrl}workers?page=1&perPage=10`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setWorkers(data.data.result || []))
-      .catch(() => setWorkers([]));
-  }, []);
+  fetch(`${backendUrl}workers?page=1&perPage=10`, {
+    credentials: "include",
+  })
+    .then((res) => res.json())
+    .then((data) => setWorkers(data.data.result || []))
+    .catch(() => setWorkers([]));
+}, []);
 
   const handleApplyHire = (worker) => {
     alert(`You applied to hire ${worker.fullName}. Contact: ${worker.phoneNo || "N/A"}`);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    window.location.href = "/login";
-  };
+  fetch(`${backendUrl}auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then(() => setUser(null))
+    .finally(() => navigate("/login"));
+};
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
