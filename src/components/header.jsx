@@ -1,8 +1,10 @@
-// Header.jsx
+
 import React, { useState, useEffect } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaTimes, FaHome, FaInfoCircle, FaUserCircle } from "react-icons/fa";
 import { useUser } from "../context/UserContextProvider.jsx";
+
+const backedUrl = import.meta.env.VITE_BASE_URL
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,11 +17,13 @@ const Header = () => {
   }, [location]);
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    sessionStorage.removeItem("tabLoggedIn"); 
-    setUser(null);
-    navigate("/login");
-  };
+  fetch(`${backedUrl}auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then(() => setUser(null))
+    .finally(() => navigate("/login"));
+};
 
   if (loading) {
     return (

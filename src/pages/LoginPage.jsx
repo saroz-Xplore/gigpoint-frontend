@@ -51,13 +51,11 @@ const LoginPage = () => {
         const data = await response.json();
 
         if (response.ok) {
-
-          localStorage.setItem("accessToken", data.data.accessToken);
-          setUser({ fullName: data.data.fullName || "Worker", role: "worker" }); 
-          navigate("/worker-dashboard");
+        setUser({ fullName: data.data.fullName || "Worker", role: "worker" });
+        navigate("/worker-dashboard");
         } else {
-          setErrors({ password: data.message || "Login failed" });
-        }
+        setErrors({ password: data.message || "Login failed" });
+        } 
       } catch (error) {
         console.error("Network error:", error);
         setErrors({ password: "Something went wrong. Please try again." });
