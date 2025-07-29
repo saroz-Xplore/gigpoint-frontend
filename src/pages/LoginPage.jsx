@@ -45,10 +45,13 @@ const LoginPage = () => {
         const response = await fetch(`${backendUrl}auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: "include",
           body: JSON.stringify({ email, password }),
         });
         
+        
         const data = await response.json();
+        console.log(data, "data");
 
         if (response.ok) {
         setUser({ fullName: data.data.fullName || "Worker", role: "worker" });

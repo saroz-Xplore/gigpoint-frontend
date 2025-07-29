@@ -4,7 +4,7 @@ import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaTimes, FaHome, FaInfoCircle, FaUserCircle } from "react-icons/fa";
 import { useUser } from "../context/UserContextProvider.jsx";
 
-const backedUrl = import.meta.env.VITE_BASE_URL
+const backendUrl = import.meta.env.VITE_BASE_URL
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -17,7 +17,7 @@ const Header = () => {
   }, [location]);
 
   const handleLogout = () => {
-  fetch(`${backedUrl}auth/logout`, {
+  fetch(`${backendUrl}auth/logout`, {
     method: "POST",
     credentials: "include",
   })
