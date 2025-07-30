@@ -93,13 +93,18 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
 
-  const dashboardPath = user?.role === "worker" ? "/worker-dashboard" : "/user-dashboard";
+  const dashboardPath = (() => {
+  if (!user || !user.role) return "/dashboard";
+  if (user.role === "worker") return "/worker-dashboard";
+  if (user.role === "user") return "/user-dashboard";
+  return "/dashboard";
+})();
 
-  const links = [
-    { to: "/", label: "Home" },
-    { to: "/about", label: "About Us" },
-    { to: user ? dashboardPath : "/login", label: "Dashboard" },
-  ];
+const links = [
+  { to: "/", label: "Home" },
+  { to: "/about", label: "About Us" },
+  { to: dashboardPath, label: "Dashboard" },
+];
 
   return (
     <nav className={`flex ${isMobile ? "flex-col space-y-3 px-2" : "space-x-12 items-center"}`}>
