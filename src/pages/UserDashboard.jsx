@@ -8,7 +8,7 @@ const UserDashboard = () => {
   const dropdownRef = useRef();
 
   useEffect(() => {
-  fetch(`${backend}auth/my`, {
+  fetch(`${backendUrl}auth/my`, {
     credentials: "include",
   })
     .then((res) => res.json())
