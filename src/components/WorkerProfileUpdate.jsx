@@ -161,7 +161,7 @@ const WorkerProfileUpdate = () => {
         <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mt-6">
           <button
             type="submit"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm transition shadow-md"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm transition shadow-md cursor-pointer"
           >
             Update Profile
           </button>
@@ -169,7 +169,7 @@ const WorkerProfileUpdate = () => {
           <button
             type="button"
             onClick={() => navigate("/profile/change-password")}
-            className="flex-1 border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white py-2 rounded-md text-sm transition shadow-md"
+            className="flex-1 border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white py-2 rounded-md text-sm transition shadow-md cursor-pointer"
           >
             Change Password
           </button>
