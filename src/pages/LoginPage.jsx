@@ -67,7 +67,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
-        {/* Left Side - Banner */}
+      
         <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-blue-600 to-blue-400 p-8 text-white relative">
           <img
             src="https://images.unsplash.com/photo-1665072204431-b3ba11bd6d06?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -84,7 +84,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Right Side - Form */}
+      
         <div className="w-full md:w-1/2 p-8 md:p-10">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Login</h1>
@@ -93,20 +93,20 @@ const LoginPage = () => {
 
           {!role && (
             <div className="mb-8">
-              <p className="text-center font-medium text-gray-700 mb-6">
+              <p className="text-center font-medium text-gray-700 mb-6 ">
                 Continue as
               </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6 ">
                 <button
                   onClick={() => setRole("user")}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                 >
                   <FaUser className="text-blue-600" />
                   <span className="font-medium text-gray-700">Homeowner</span>
                 </button>
                 <button
                   onClick={() => setRole("worker")}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                 >
                   <FaTools className="text-blue-600" />
                   <span className="font-medium text-gray-700">
@@ -205,7 +205,7 @@ const LoginPage = () => {
                 </div>
                 <button
                   onClick={() => navigate("/forgot-password")}
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm text-blue-600 hover:underline cursor-pointer"
                 >
                   Forgot password?
                 </button>
@@ -213,7 +213,7 @@ const LoginPage = () => {
 
               <button
                 onClick={handleWorkerLogin}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold mb-4"
+                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold mb-4 cursor-pointer"
               >
                 Sign In
               </button>
@@ -222,7 +222,7 @@ const LoginPage = () => {
                 Don't have an account?{" "}
                 <button
                   onClick={() => navigate("/worker-signup")}
-                  className="text-blue-600 font-medium hover:underline"
+                  className="text-blue-600 font-medium hover:underline cursor-pointer"
                 >
                   Sign up here
                 </button>

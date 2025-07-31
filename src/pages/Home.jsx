@@ -59,13 +59,13 @@ const HomePage = () => {
             </p>
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <a
-                href="#"
+                href="/login"
                 className="px-6 py-3 bg-primary-600 text-black border rounded-md font-medium hover:bg-blue-500 text-center"
               >
                 Post a Job
               </a>
               <a
-                href="#"
+                href="/about"
                 className="px-6 py-3 bg-white text-primary-600 border border-primary-600 rounded-md font-medium hover:bg-blue-500 text-center"
               >
                 Browse Services
@@ -149,7 +149,7 @@ const HomePage = () => {
             Discover trusted experts ready to handle all your home service needs with care and professionalism.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <a href="#" className="px-8 py-3 bg-white text-primary-600 rounded-md font-bold hover:bg-blue-300">
+            <a href="/login" className="px-8 py-3 bg-white text-primary-600 rounded-md font-bold hover:bg-blue-300">
               Post a Job - It's Free
             </a>
           </div>

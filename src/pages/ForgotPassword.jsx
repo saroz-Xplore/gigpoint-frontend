@@ -120,7 +120,7 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
             >
               {loading ? "Sending OTP..." : "Send OTP"}
             </button>
@@ -145,14 +145,14 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
             >
               {loading ? "Verifying..." : "Verify OTP"}
             </button>
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="block w-full text-center text-sm text-blue-600 hover:underline mt-1"
+              className="block w-full text-center text-sm text-blue-600 hover:underline mt-1 cursor-pointer"
             >
               ← Back to Email
             </button>
