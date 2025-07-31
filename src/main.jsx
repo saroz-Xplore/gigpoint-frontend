@@ -16,6 +16,7 @@ import ProtectedRoute from './pages/ProtectedRoute.jsx'
 import WorkerProfileUpdate from './components/WorkerProfileUpdate.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
+import ChangePassword from './components/ChangePassword.jsx'
 
 
 
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
         path: "/forgot-password",
         element: <ForgotPassword />,
         errorElement: <ErrorPage />,
+      },
+      {
+        path: "/profile/change-password",
+        element: <ChangePassword />
       },
       {
         path: "*", 
