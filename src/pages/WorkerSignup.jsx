@@ -1,5 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  FaUserCircle,
+  FaBriefcase,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaSpinner,
+  FaCloudUploadAlt,
+  FaTimes,
+  FaChevronDown,
+} from "react-icons/fa";
 
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
@@ -9,6 +19,7 @@ const WorkerSignup = () => {
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     address: "",
     phoneNo: "",
     experienceYear: "",
@@ -17,7 +28,6 @@ const WorkerSignup = () => {
     role: "worker",
   });
 
-  const [skillInput, setSkillInput] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -32,22 +42,31 @@ const WorkerSignup = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (file && file.size > 2 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        profilePicture: "Image must be less than 2MB",
+      }));
+      return;
+    }
     setProfilePicture(file);
+    setErrors((prev) => ({ ...prev, profilePicture: null }));
   };
 
-  const handleAddSkill = () => {
-    const skill = skillInput.trim();
+  const handleSkillChange = (e) => {
+    const skill = e.target.value;
     if (skill && !formData.skills.includes(skill)) {
       setFormData((prev) => ({
         ...prev,
         skills: [...prev.skills, skill],
       }));
-      setSkillInput("");
-      setErrors((prev) => ({ ...prev, skills: undefined }));
+      setErrors((prev) => ({ ...prev, skills: null }));
+      e.target.value = "";
     }
   };
 
@@ -64,43 +83,36 @@ const WorkerSignup = () => {
     setSuccessMessage(null);
 
     let errors = {};
-
     if (!formData.fullName.trim()) errors.fullName = "Required";
     if (!formData.email) errors.email = "Required";
     else if (!validateEmail(formData.email)) errors.email = "Invalid email";
     if (!formData.password || formData.password.length < 6)
       errors.password = "Min 6 characters";
+    if (formData.password !== formData.confirmPassword)
+      errors.confirmPassword = "Passwords don't match";
     if (!formData.address.trim()) errors.address = "Required";
     if (!formData.phoneNo) errors.phoneNo = "Required";
-    else if (!validatePhone(formData.phoneNo)) errors.phoneNo = "Invalid number";
+    else if (!validatePhone(formData.phoneNo))
+      errors.phoneNo = "Invalid number";
     if (formData.skills.length === 0) errors.skills = "Add at least one skill";
     if (!formData.gender) errors.gender = "Select gender";
-    if (!formData.experienceYear || Number(formData.experienceYear) < 1) {
+    if (!formData.experienceYear || Number(formData.experienceYear) < 1)
       errors.experienceYear = "Minimum 1 year required";
-    }
     if (!profilePicture) errors.profilePicture = "Profile picture required";
 
     setErrors(errors);
-
     if (Object.keys(errors).length !== 0) return;
 
     try {
       setLoading(true);
-
       const payload = new FormData();
-      payload.append("fullName", formData.fullName);
-      payload.append("email", formData.email);
-      payload.append("password", formData.password);
-      payload.append("address", formData.address);
-      payload.append("phoneNo", formData.phoneNo.trim());
-      payload.append("experienceYear", formData.experienceYear);
-      payload.append("gender", formData.gender);
-      payload.append("role", formData.role);
-
-      formData.skills.forEach((skill) => {
-        payload.append("skills[]", skill);
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "skills") {
+          value.forEach((skill) => payload.append("skills[]", skill));
+        } else {
+          payload.append(key, value);
+        }
       });
-
       payload.append("profilePicture", profilePicture);
 
       const response = await fetch(API_URL, {
@@ -118,6 +130,7 @@ const WorkerSignup = () => {
         fullName: "",
         email: "",
         password: "",
+        confirmPassword: "",
         address: "",
         phoneNo: "",
         experienceYear: "",
@@ -134,260 +147,554 @@ const WorkerSignup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-200 to-white flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-4 sm:p-6">
-        <h2 className="text-xl font-bold text-center text-blue-700 mb-4">
-          WELCOME TO GIGPOINT !
-        </h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Join Gigpoint as a Worker
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Create your account and start finding suitable jobs today!
+          </p>
+        </div>
 
-        {!successMessage && (
-          <form onSubmit={handleSubmit} className="space-y-5 text-sm">
-            {[
-              { name: "fullName", label: "Full Name", type: "text" },
-              { name: "email", label: "Email", type: "email" },
-              { name: "password", label: "Password", type: "password" },
-              { name: "phoneNo", label: "Phone No", type: "tel" },
-              {
-                name: "experienceYear",
-                label: "Experience",
-                type: "number",
-                min: 1,
-              },
-            ].map((field) => (
-              <div key={field.name} className="flex items-center w-full">
-                <label className="w-32 text-[15px] font-semibold text-gray-700">
-                  {field.label}:
-                </label>
-                <div className="flex-1">
-                  <input
-                    type={field.type}
-                    name={field.name}
-                    value={formData[field.name]}
-                    onChange={handleChange}
-                    min={field.min}
-                    className={`w-full px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 ${
-                      errors[field.name]
-                        ? "border-red-400 focus:ring-red-300"
-                        : "border-gray-400 focus:ring-blue-300"
-                    }`}
-                    disabled={loading}
-                  />
-                  {errors[field.name] && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors[field.name]}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            <div className="flex items-start w-full">
-              <label className="w-32 text-[15px] font-semibold text-gray-700 pt-2">
-                Address:
-              </label>
-              <div className="flex-1">
-                {formData.address.length > 40 ? (
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    rows={3}
-                    className={`w-full px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 ${
-                      errors.address
-                        ? "border-red-400 focus:ring-red-300"
-                        : "border-gray-400 focus:ring-blue-300"
-                    }`}
-                    disabled={loading}
-                  ></textarea>
-                ) : (
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 ${
-                      errors.address
-                        ? "border-red-400 focus:ring-red-300"
-                        : "border-gray-400 focus:ring-blue-300"
-                    }`}
-                    disabled={loading}
-                  />
-                )}
-                {errors.address && (
-                  <p className="text-red-500 text-xs mt-1">{errors.address}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Profile Picture */}
-            <div className="flex items-center w-full">
-              <label
-                className="w-32 text-[15px] font-semibold text-gray-700"
-                htmlFor="profilePicture"
-              >
-                Profile Picture:
-              </label>
-              <div className="flex-1 flex items-center gap-4">
-                <input
-                  type="file"
-                  id="profilePicture"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className={`w-full text-sm focus:outline-none focus:ring-2 rounded-lg border px-4 py-2 ${
-                    errors.profilePicture
-                      ? "border-red-400 focus:ring-red-300"
-                      : "border-gray-400 focus:ring-blue-300"
-                  }`}
-                  disabled={loading}
-                />
-                {profilePicture && (
+        {/* Form Container */}
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+          <div className="md:flex">
+            {/* Left Side (Illustration) */}
+            <div className="hidden md:flex md:w-2/5 bg-gradient-to-br from-blue-500 to-indigo-600 p-8 text-white flex-col justify-between relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-600/30 to-indigo-600/30 z-0"></div>
+              <div className="relative z-10">
+                <div className="flex justify-center items-center h-64 mb-6">
                   <img
-                    src={URL.createObjectURL(profilePicture)}
-                    alt="Profile Preview"
-                    className="w-10 h-10 object-cover rounded-full border border-gray-400"
+                    src="/gigpointworker.png"
+                    alt="Worker Illustration"
+                    className="max-h-full w-auto object-contain drop-shadow-lg"
                   />
-                )}
+                </div>
+                <h2 className="text-xl font-bold mb-4 text-center">
+                  Why Join Gigpoint?
+                </h2>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <FaCheckCircle className="mt-1 mr-2 flex-shrink-0" />
+                    <span>Find local jobs easily</span>
+                  </li>
+                  <li className="flex items-start">
+                    <FaCheckCircle className="mt-1 mr-2 flex-shrink-0" />
+                    <span>Set your own schedule and price</span>
+                  </li>
+                  <li className="flex items-start">
+                    <FaCheckCircle className="mt-1 mr-2 flex-shrink-0" />
+                    <span>Get paid for your skills</span>
+                  </li>
+                  <li className="flex items-start">
+                    <FaCheckCircle className="mt-1 mr-2 flex-shrink-0" />
+                    <span>Build your experience & reputation</span>
+                  </li>
+                </ul>
               </div>
-            </div>
-            {errors.profilePicture && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.profilePicture}
-              </p>
-            )}
-
-            {/* Skills */}
-            <div className="flex flex-col w-full">
-              <div className="flex items-center gap-2 mb-1">
-                <label className="w-32 text-[15px] font-semibold text-gray-700">
-                  Skills:
-                </label>
-                <select
-                  name="skillInput"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  className={`flex-grow px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 ${
-                    errors.skills
-                      ? "border-red-400 focus:ring-red-300"
-                      : "border-gray-400 focus:ring-blue-300"
-                  }`}
-                  disabled={loading}
-                >
-                  <option value="">Select a skill</option>
-                  <option value="plumber">Plumber</option>
-                  <option value="electrician">Electrician</option>
-                  <option value="cleaner">Cleaner</option>
-                  <option value="saloon">Saloon</option>
-                  <option value="carpentry">Carpentry</option>
-                  <option value="driver">Driver</option>
-                  <option value="homeRenovation">Home Renovation</option>
-                </select>
+              <div className="mt-6 text-center text-blue-100 text-sm relative z-10">
+                Already have an account?{" "}
                 <button
-                  type="button"
-                  onClick={handleAddSkill}
-                  aria-label="Add skill"
-                  className="bg-blue-700 hover:bg-blue-800 text-white px-3 rounded-lg text-lg font-bold leading-none select-none"
-                  disabled={loading}
+                  onClick={() => navigate("/login?role=worker")}
+                  className="text-white font-medium hover:underline"
                 >
-                  +
+                  Login here
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2 pl-32">
-                {formData.skills.map((skill) => (
-                  <div
-                    key={skill}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center space-x-2"
+            </div>
+
+            {/* Right Side (Form) */}
+            <div className="md:w-3/5 p-6 md:p-8">
+              {successMessage ? (
+                <div className="text-center p-6 bg-green-50 rounded-lg">
+                  <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
+                  <h3 className="text-xl font-bold text-green-800 mb-2">
+                    Registration Successful!
+                  </h3>
+                  <p className="text-green-600 mb-4">
+                    You can now login to your account.
+                  </p>
+                  <button
+                    onClick={() => navigate("/login?role=worker")}
+                    className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition"
                   >
-                    <span>{skill}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSkill(skill)}
-                      className="text-blue-600 hover:text-blue-900 font-bold"
-                      aria-label={`Remove skill ${skill}`}
-                      disabled={loading}
-                    >
-                      &times;
-                    </button>
-                  </div>
-                ))}
-              </div>
-              {errors.skills && (
-                <p className="text-red-500 text-xs mt-1 pl-32">
-                  {errors.skills}
-                </p>
+                    Go to Login
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {apiError && (
+                    <div className="p-4 bg-red-50 text-red-600 rounded-lg mb-6 flex items-start">
+                      <FaExclamationCircle className="mr-2 mt-0.5 flex-shrink-0" />
+                      <span>{apiError}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Personal Info Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                        <span className="bg-blue-100 text-blue-600 p-2 rounded-full mr-3">
+                          <FaUserCircle />
+                        </span>
+                        Personal Information
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Full Name */}
+                        <div>
+                          <label
+                            htmlFor="fullName"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Full Name*
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              id="fullName"
+                              name="fullName"
+                              value={formData.fullName}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.fullName
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                              placeholder="John Doe"
+                              disabled={loading}
+                            />
+                            {errors.fullName && (
+                              <div className="absolute right-3 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.fullName && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.fullName}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                          <label
+                            htmlFor="email"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Email*
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="email"
+                              id="email"
+                              name="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.email
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                              placeholder="john@example.com"
+                              disabled={loading}
+                            />
+                            {errors.email && (
+                              <div className="absolute right-3 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.email && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.email}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                          <label
+                            htmlFor="password"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Password*
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="password"
+                              id="password"
+                              name="password"
+                              value={formData.password}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.password
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                              placeholder="••••••••"
+                              disabled={loading}
+                            />
+                            {errors.password && (
+                              <div className="absolute right-3 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.password && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.password}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                          <label
+                            htmlFor="confirmPassword"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Confirm Password*
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="password"
+                              id="confirmPassword"
+                              name="confirmPassword"
+                              value={formData.confirmPassword}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.confirmPassword
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                              placeholder="••••••••"
+                              disabled={loading}
+                            />
+                            {errors.confirmPassword && (
+                              <div className="absolute right-3 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.confirmPassword && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.confirmPassword}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Phone */}
+                        <div>
+                          <label
+                            htmlFor="phoneNo"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Phone Number*
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="tel"
+                              id="phoneNo"
+                              name="phoneNo"
+                              value={formData.phoneNo}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.phoneNo
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                              placeholder="1234567890"
+                              disabled={loading}
+                            />
+                            {errors.phoneNo && (
+                              <div className="absolute right-3 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.phoneNo && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.phoneNo}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Work Details Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                        <span className="bg-blue-100 text-blue-600 p-2 rounded-full mr-3">
+                          <FaBriefcase />
+                        </span>
+                        Work Details
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Experience */}
+                        <div>
+                          <label
+                            htmlFor="experienceYear"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Years of Experience*
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              id="experienceYear"
+                              name="experienceYear"
+                              min="1"
+                              value={formData.experienceYear}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.experienceYear
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                              placeholder="2"
+                              disabled={loading}
+                            />
+                            {errors.experienceYear && (
+                              <div className="absolute right-3 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.experienceYear && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.experienceYear}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Gender */}
+                        <div>
+                          <label
+                            htmlFor="gender"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
+                            Gender*
+                          </label>
+                          <div className="relative">
+                            <select
+                              id="gender"
+                              name="gender"
+                              value={formData.gender}
+                              onChange={handleChange}
+                              className={`w-full px-4 py-2 border ${
+                                errors.gender
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition appearance-none`}
+                              disabled={loading}
+                            >
+                              <option value="">Select Gender</option>
+                              <option value="male">Male</option>
+                              <option value="female">Female</option>
+                              <option value="other">Other</option>
+                            </select>
+                            <div className="absolute right-3 top-3 text-gray-400 pointer-events-none">
+                              <FaChevronDown />
+                            </div>
+                            {errors.gender && (
+                              <div className="absolute right-8 top-3 text-red-500">
+                                <FaExclamationCircle />
+                              </div>
+                            )}
+                          </div>
+                          {errors.gender && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.gender}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div>
+                      <label
+                        htmlFor="address"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Address*
+                      </label>
+                      <div className="relative">
+                        <textarea
+                          id="address"
+                          name="address"
+                          rows="3"
+                          value={formData.address}
+                          onChange={handleChange}
+                          className={`w-full px-4 py-2 border ${
+                            errors.address
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                          placeholder="Your full address"
+                          disabled={loading}
+                        ></textarea>
+                        {errors.address && (
+                          <div className="absolute right-3 top-3 text-red-500">
+                            <FaExclamationCircle />
+                          </div>
+                        )}
+                      </div>
+                      {errors.address && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.address}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Skills*
+                      </label>
+                      <div className="mb-2">
+                        <select
+                          id="skill-input"
+                          onChange={handleSkillChange}
+                          className={`w-full px-4 py-2 border ${
+                            errors.skills ? "border-red-500" : "border-gray-300"
+                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
+                          disabled={loading}
+                        >
+                          <option value="">Select a skill</option>
+                          <option value="plumber">Plumber</option>
+                          <option value="electrician">Electrician</option>
+                          <option value="cleaner">Cleaner</option>
+                          <option value="saloon">Saloon</option>
+                          <option value="carpentry">Carpentry</option>
+                          <option value="driver">Driver</option>
+                          <option value="homeRenovation">
+                            Home Renovation
+                          </option>
+                        </select>
+                      </div>
+                      <div
+                        id="skills-container"
+                        className="flex flex-wrap gap-2 min-h-10"
+                      >
+                        {formData.skills.map((skill) => (
+                          <div
+                            key={skill}
+                            className="relative bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                          >
+                            <span>{skill}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSkill(skill)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition"
+                              data-skill={skill}
+                              disabled={loading}
+                            >
+                              <FaTimes className="text-xs" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      {errors.skills && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.skills}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Profile Picture */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Profile Picture*
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <label
+                          htmlFor="profilePicture"
+                          className="file-input-label flex-1 cursor-pointer"
+                        >
+                          <div
+                            className={`border-2 border-dashed ${
+                              errors.profilePicture
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-lg p-4 text-center hover:border-blue-500 transition`}
+                          >
+                            {profilePicture ? (
+                              <div className="text-gray-500">
+                                <FaCheckCircle className="text-green-500 text-2xl mx-auto mb-2" />
+                                <p className="text-sm truncate">
+                                  {profilePicture.name}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {(profilePicture.size / 1024).toFixed(1)} KB
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="text-gray-500">
+                                <FaCloudUploadAlt className="text-2xl mx-auto mb-2" />
+                                <p className="text-sm">
+                                  Click to upload or drag and drop
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  PNG, JPG (max. 2MB)
+                                </p>
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              id="profilePicture"
+                              name="profilePicture"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              className="hidden"
+                              disabled={loading}
+                            />
+                          </div>
+                        </label>
+                        {profilePicture && (
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                            <img
+                              src={URL.createObjectURL(profilePicture)}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {errors.profilePicture && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {errors.profilePicture}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:opacity-90 transition flex items-center justify-center"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <FaSpinner className="animate-spin mr-2" />
+                            Creating Account...
+                          </>
+                        ) : (
+                          "Create Account"
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </>
               )}
             </div>
-
-            {/* Gender */}
-            <div className="flex items-center w-full">
-              <label className="w-32 text-[15px] font-semibold text-gray-700">
-                Gender:
-              </label>
-              <div className="flex-1">
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 ${
-                    errors.gender
-                      ? "border-red-400 focus:ring-red-300"
-                      : "border-gray-400 focus:ring-blue-300"
-                  }`}
-                  disabled={loading}
-                >
-                  <option value="">Select</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-                {errors.gender && (
-                  <p className="text-red-500 text-xs mt-1">{errors.gender}</p>
-                )}
-              </div>
-            </div>
-
-            {apiError && (
-              <p className="text-red-600 text-sm text-center mt-1">
-                {apiError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full bg-blue-700 text-white py-3 rounded-lg hover:bg-blue-800 transition text-sm font-semibold mt-3"
-              disabled={loading}
-            >
-              {loading ? "Signing Up..." : "Sign Up"}
-            </button>
-
-            <p className="text-center text-sm text-gray-500 mt-2">
-              Already have an account?{" "}
-              <span
-                onClick={() => navigate("/login?role=worker")}
-                className="text-blue-600 font-semibold cursor-pointer hover:underline"
-              >
-                Login here
-              </span>
-            </p>
-          </form>
-        )}
-
-        {successMessage && (
-          <div className="text-center">
-            <p className="text-green-600 text-sm font-medium mb-4">
-              {successMessage}
-            </p>
-            <button
-              onClick={() => navigate("/login?role=worker")}
-              className="bg-blue-700 hover:bg-blue-800 text-white py-2 px-6 rounded-lg text-sm font-semibold"
-            >
-              Go to Login
-            </button>
           </div>
-        )}
-
-        {apiError && !successMessage && (
-          <p className="text-red-600 text-sm text-center mt-1">{apiError}</p>
-        )}
+        </div>
       </div>
     </div>
   );
