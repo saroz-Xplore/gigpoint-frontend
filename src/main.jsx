@@ -15,6 +15,7 @@ import GoogleCallbackHandler from './pages/GoogleCallBackHandler.jsx'
 import ProtectedRoute from './pages/ProtectedRoute.jsx'
 import WorkerProfileUpdate from './components/WorkerProfileUpdate.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
+import ErrorPage from './pages/ErrorPage.jsx'
 
 
 
@@ -25,57 +26,70 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <HomePage />
+        element: <HomePage />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/about",
-        element: <AboutPage/>
+        element: <AboutPage />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/dashboard",
-        element: <Dashboard />
+        element: <Dashboard />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/login",
-        element: <LoginPage />
+        element: <LoginPage />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/worker-signup",
-        element: <WorkerSignup />
+        element: <WorkerSignup />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/user-dashboard",
         element: (
-          <ProtectedRoute >
-         <UserDashboard />
-           </ProtectedRoute>
-        )
+          <ProtectedRoute>
+            <UserDashboard />
+          </ProtectedRoute>
+        ),
+        errorElement: <ErrorPage />,
       },
       {
         path: "/worker-dashboard",
         element: (
-            <ProtectedRoute >
-              <WorkerDashboard />
-            </ProtectedRoute>
-        )
+          <ProtectedRoute>
+            <WorkerDashboard />
+          </ProtectedRoute>
+        ),
+        errorElement: <ErrorPage />,
       },
       {
         path: "/oauth-success",
-        element: <GoogleCallbackHandler />
+        element: <GoogleCallbackHandler />,
+        errorElement: <ErrorPage />,
       },
-    
+
       {
         path: "/update-profile",
-        element: <WorkerProfileUpdate />
+        element: <WorkerProfileUpdate />,
+        errorElement: <ErrorPage />,
       },
       {
         path: "/forgot-password",
-        element: <ForgotPassword />
+        element: <ForgotPassword />,
+        errorElement: <ErrorPage />,
       },
-    
-    ]
-  }
-])
+      {
+        path: "*", 
+        element: <ErrorPage />,
+      },
+    ],
+  },
+]);
 
 createRoot(document.getElementById('root')).render(
   <UserContextProvider >
