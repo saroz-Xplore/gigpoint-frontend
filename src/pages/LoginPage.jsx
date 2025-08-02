@@ -24,9 +24,31 @@ const LoginPage = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleGoogleSignup = () => {
-    window.location.href = `${backendUrl}oauth/google`;
-  };
+
+const handleGoogleSignup = async () => {
+  try {
+    const res = await fetch(`${backendUrl}oauth/google`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      throw new Error("Google signup failed");
+    }
+
+    const data = await res.json();
+
+    if (data.success) {
+      navigate("/user-dashboard"); 
+    } else {
+      alert(data.message || "Google signup failed!");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("❌ Google signup failed. Please try again.");
+  }
+};
+
 
   const handleWorkerLogin = async () => {
     let errors = {};
