@@ -7,8 +7,8 @@ const WorkerDashboard = () => {
   const [recommendedWorks, setRecommendedWorks] = useState([]);
   const [loadingWorks, setLoadingWorks] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [isAvailable, setIsAvailable] = useState(true); 
-  const [workinfo , setWorkInfo] =useState(null)
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [workinfo, setWorkInfo] = useState(null);
 
   useEffect(() => {
     const fetchWorkerProfile = async () => {
@@ -18,7 +18,7 @@ const WorkerDashboard = () => {
         });
         const userData = await res.json();
         setWorker(userData.data.Worker);
-        setWorkInfo(userData.data)
+        setWorkInfo(userData.data);
         if (userData.data?.isAvailable !== undefined) {
           setIsAvailable(userData.data.isAvailable);
         }
@@ -58,7 +58,6 @@ const WorkerDashboard = () => {
     const newStatus = !isAvailable;
     setIsAvailable(newStatus);
 
- 
     try {
       await fetch(`${backendUrl}auth/available`, {
         method: "POST",
@@ -70,7 +69,6 @@ const WorkerDashboard = () => {
       console.error("Error updating availability:", err);
     }
   };
-
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
@@ -232,6 +230,32 @@ const WorkerDashboard = () => {
                 <p className="text-xs text-blue-500 font-medium">Address</p>
                 <p className="text-sm text-blue-800">
                   {worker?.address || "Not provided"}
+                </p>
+              </div>
+            </div>
+
+            {/* Joined On Section */}
+            <div className="flex items-start">
+              <div className="flex-shrink-0 pt-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5 text-blue-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10m-12 5a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2H7a2 2 0 00-2 2v7z"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-xs text-blue-500 font-medium">Joined On</p>
+                <p className="text-sm text-blue-800">
+                  {workinfo?.JoinedOn || "Jan 1 2001"}
                 </p>
               </div>
             </div>
