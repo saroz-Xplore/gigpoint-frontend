@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { FaBriefcase } from "react-icons/fa";
+import { FaBriefcase, FaCheck, FaFileAlt, FaRupeeSign } from "react-icons/fa";
+
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
 const WorkerDashboard = () => {
@@ -8,6 +9,63 @@ const WorkerDashboard = () => {
   const [loadingWorks, setLoadingWorks] = useState(true);
   const [isAvailable, setIsAvailable] = useState(true);
   const [workinfo, setWorkInfo] = useState(null);
+
+  const [applications, setApplications] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [totalEarning, setTotalEarning] = useState(0);
+
+  const openApplications = async (status) => {
+    setSelectedStatus(status);
+    setShowModal(true);
+
+    if (
+      (status === "applied" && (!workinfo?.jobApplied || workinfo.jobApplied.length === 0)) ||
+      (status === "completed" && (!workinfo?.jobDone || workinfo.jobDone.length === 0))
+    ) {
+      setApplications([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${backendUrl}job/worker/get/application`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        let errorData = null;
+        try {
+          errorData = await res.json();
+        } catch {
+          errorData = { message: "Unknown error" };
+        }
+
+        if (res.status === 404 && errorData?.message?.includes("0 Applications")) {
+          setApplications([]);
+          return;
+        }
+
+        console.error("Error from backend:", errorData);
+        setApplications([]);
+        return;
+      }
+
+      const userData = await res.json();
+      let apps = userData.data?.myApplications || [];
+
+      if (status === "completed") {
+        apps = apps.filter((a) => a.jobId?.status === "completed");
+      } else if (status === "applied") {
+        apps = apps.filter((a) => a.jobId?.status !== "pending");
+      }
+
+      setApplications(apps);
+    } catch (err) {
+      console.error("Network or parsing error:", err);
+      setApplications([]);
+    }
+  };
 
   useEffect(() => {
     const fetchWorkerProfile = async () => {
@@ -45,8 +103,28 @@ const WorkerDashboard = () => {
       }
     };
 
+    const fetchWorkerEarning = async () => {
+      try {
+        const res = await fetch(`${backendUrl}auth/workerReports`, {
+          credentials: "include",
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          console.log("data", data);
+          setTotalEarning(data?.data?.totalEarning || 0);
+        } else {
+          setTotalEarning(0);
+        }
+      } catch (err) {
+        console.error("Error fetching earnings:", err);
+        setTotalEarning(0);
+      }
+    };
+
     fetchWorkerProfile();
     fetchRecommendedWorks();
+    fetchWorkerEarning();
   }, []);
 
   const handleWorkClick = (work) => {
@@ -70,10 +148,9 @@ const WorkerDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
      
-      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 w-72 p-6 border-r border-blue-200 flex flex-col space-y-6 overflow-auto">
-        
+      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6 overflow-auto">
         <div className="flex flex-col items-center text-center p-4 bg-white rounded-xl shadow-sm border border-blue-100">
           <div className="relative mb-3">
             <img
@@ -127,7 +204,6 @@ const WorkerDashboard = () => {
           </div>
         </div>
 
-        
         <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 overflow-auto">
           <div className="items-center mb-3 pb-2 border-b border-blue-400 inline-flex">
             <svg
@@ -153,7 +229,6 @@ const WorkerDashboard = () => {
           </div>
 
           <div className="space-y-4">
-           
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -179,7 +254,6 @@ const WorkerDashboard = () => {
               </div>
             </div>
 
-           
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -205,7 +279,6 @@ const WorkerDashboard = () => {
               </div>
             </div>
 
-          
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -237,7 +310,6 @@ const WorkerDashboard = () => {
               </div>
             </div>
 
-          
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -270,9 +342,7 @@ const WorkerDashboard = () => {
       <main className="flex-1 p-6 overflow-auto">
         {isAvailable ? (
           <>
-            <h1 className="text-2xl font-bold mb-6 text-blue-900">
-              Recommended Works
-            </h1>
+            <h1 className="text-2xl font-bold mb-6 text-blue-900">Recommended Works</h1>
             {loadingWorks ? (
               <p className="text-gray-500">Loading recommended works...</p>
             ) : recommendedWorks.length === 0 ? (
@@ -285,9 +355,7 @@ const WorkerDashboard = () => {
                     onClick={() => handleWorkClick(work)}
                     className="cursor-pointer p-4 bg-white rounded shadow hover:bg-blue-50 transition"
                   >
-                    <h2 className="text-lg font-semibold text-blue-800">
-                      {work.title}
-                    </h2>
+                    <h2 className="text-lg font-semibold text-blue-800">{work.title}</h2>
                     <p className="text-gray-600">{work.description}</p>
                   </li>
                 ))}
@@ -296,96 +364,109 @@ const WorkerDashboard = () => {
           </>
         ) : (
           <div className="text-center text-gray-500 mt-20">
-            <p>
-              You are currently unavailable. Turn on availability to see
-              recommended works.
-            </p>
+            <p>You are currently unavailable. Turn on availability to see recommended works.</p>
           </div>
         )}
       </main>
 
-<aside className="bg-gradient-to-br from-blue-50 to-blue-100 w-72 p-6 border-l border-blue-200 flex flex-col space-y-6 overflow-auto shadow-sm">
     
-      <div className="mb-4 pb-2">
+      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-64 w-full p-5 border-t md:border-t-0 md:border-l border-blue-200 flex flex-col space-y-5 overflow-auto shadow-sm">
+        
+        <div className="pb-2 border-b border-blue-400">
+          <div className="inline-flex items-center gap-3">
+            <FaBriefcase className="w-5 h-5 text-blue-600 animate-pulse" />
+            <h2 className="text-md font-semibold text-blue-900">Work Statistics</h2>
+          </div>
+        </div>
+
+        <div className="p-3 bg-white rounded-xl shadow-sm border border-green-200 flex items-center gap-3 hover:bg-blue-50 transition">
+          <div className="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-lg select-none">
+            <FaRupeeSign />
+          </div>
+          <div>
+            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Total Earnings</p>
+            <p className="text-base font-bold text-blue-900">NPR. {totalEarning}</p>
+          </div>
+        </div>
+
+        <div className="p-3 bg-white rounded-xl shadow-sm border border-blue-200 flex items-center gap-3 hover:bg-blue-50 transition">
+          <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-lg select-none">
+            <FaCheck />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Completed</p>
+            <div className="flex items-center gap-12">
+              <p className="text-base font-bold text-blue-900">{workinfo?.jobDone || 0}</p>
+              <button
+                onClick={() => openApplications("completed")}
+                className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
+              >
+                View History
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-3 bg-white rounded-xl shadow-sm border border-purple-200 flex items-center gap-3 hover:bg-blue-50 transition">
+          <div className="w-11 h-11 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-lg select-none">
+            <FaFileAlt />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Applied</p>
+            <div className="flex items-center gap-6">
+              <p className="text-base font-bold text-blue-900">{workinfo?.jobApplied ?? 0}</p>
+              <button
+                onClick={() => openApplications("applied")}
+                className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
+              >
+                View Applications
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {showModal && (
         <div
-          className="inline-flex items-center gap-1 border-b border-blue-400"
-          style={{ paddingBottom: "0.5rem" }} 
+          className="fixed inset-0 bg-black/10 flex justify-center items-center z-50 transition-opacity"
+          style={{ backdropFilter: "blur(2px)" }}
         >
-          <FaBriefcase className="w-5 h-5 text-blue-600 mr-2 animate-pulse" />
-          <h2
-            className="text-md font-semibold text-blue-900"
-            style={{ fontFamily: "'Courier New', Courier, monospace" }}
-          >
-            Work Statistics
-          </h2>
-        </div>
-      </div>
+          <div className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-[420px] max-h-[80vh] overflow-hidden transform transition-all scale-95 hover:scale-100 duration-200">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-center items-center relative">
+              <h2 className="text-xl font-semibold text-blue-900 text-center">
+                {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Applications
+              </h2>
+            </div>
 
-     
-      <div className="space-y-4">
-       
-        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 flex items-center gap-4 cursor-default hover:bg-blue-50 transition">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <p
-              className="text-xs text-blue-600 font-medium uppercase"
-              style={{ fontFamily: "'Courier New', Courier, monospace" }}
-            >
-              Completed
-            </p>
-            <p className="text-xl font-bold text-blue-900">
-              {workinfo?.jobDone || 0}
-            </p>
-          </div>
-        </div>
+            <div className="p-6 overflow-auto max-h-[60vh] space-y-3">
+              {applications.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center py-6">No applications found.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {applications.map((app) => (
+                    <li
+                      key={app._id}
+                      className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-sm border border-blue-100"
+                    >
+                      <p className="font-semibold text-blue-800">{app.jobId?.title || "No Title"}</p>
+                      <p className="text-gray-600 capitalize text-sm">Status: {app.status}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-     
-        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 flex items-center gap-4 cursor-default hover:bg-purple-50 transition">
-          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-              />
-            </svg>
-          </div>
-          <div>
-            <p
-              className="text-xs text-purple-600 font-medium uppercase"
-              style={{ fontFamily: "'Courier New', Courier, monospace" }}
-            >
-              Applied
-            </p>
-            <p className="text-xl font-bold text-purple-900">
-              {workinfo?.jobApplied || 0}
-            </p>
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+      )}
     </div>
   );
 };
