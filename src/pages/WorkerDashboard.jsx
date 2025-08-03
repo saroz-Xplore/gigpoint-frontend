@@ -6,7 +6,6 @@ const WorkerDashboard = () => {
   const [worker, setWorker] = useState(null);
   const [recommendedWorks, setRecommendedWorks] = useState([]);
   const [loadingWorks, setLoadingWorks] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [workinfo, setWorkInfo] = useState(null);
 
@@ -71,9 +70,10 @@ const WorkerDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 w-full md:w-72 h-auto md:h-screen p-5 md:p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6">
-        {/* Profile Section */}
+    <div className="flex min-h-screen bg-gray-50">
+     
+      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 w-72 p-6 border-r border-blue-200 flex flex-col space-y-6 overflow-auto">
+        
         <div className="flex flex-col items-center text-center p-4 bg-white rounded-xl shadow-sm border border-blue-100">
           <div className="relative mb-3">
             <img
@@ -127,9 +127,9 @@ const WorkerDashboard = () => {
           </div>
         </div>
 
-        {/* Profile Details Card */}
-        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
-          <div className="flex items-center mb-3 pb-2 border-b border-blue-100">
+        
+        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 overflow-auto">
+          <div className="items-center mb-3 pb-2 border-b border-blue-400 inline-flex">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-5 h-5 text-blue-500 mr-2"
@@ -153,6 +153,7 @@ const WorkerDashboard = () => {
           </div>
 
           <div className="space-y-4">
+           
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -178,6 +179,7 @@ const WorkerDashboard = () => {
               </div>
             </div>
 
+           
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -203,6 +205,7 @@ const WorkerDashboard = () => {
               </div>
             </div>
 
+          
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -234,7 +237,7 @@ const WorkerDashboard = () => {
               </div>
             </div>
 
-            {/* Joined On Section */}
+          
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-1">
                 <svg
@@ -261,98 +264,10 @@ const WorkerDashboard = () => {
             </div>
           </div>
         </div>
-
-        {/* Work Info Card - Without Rating */}
-        <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden transition-all duration-200">
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`w-full flex items-center justify-between p-4 text-blue-900 hover:bg-blue-50 transition-colors`}
-          >
-            <div className="flex items-center">
-              <div className="p-2 mr-3 rounded-lg bg-blue-100 text-blue-600">
-                <FaBriefcase className="text-current" />
-              </div>
-              <span
-                className="font-medium"
-                style={{ fontFamily: "'Courier New', Courier, monospace" }}
-              >
-                Work Statistics
-              </span>
-            </div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className={`w-5 h-5 text-blue-400 transform transition-transform ${
-                showSettings ? "rotate-180" : ""
-              }`}
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-
-          {showSettings && (
-            <div className="px-4 pb-4 pt-2 border-t border-blue-100">
-              {/* Stats Grid - Only Completed and Applied */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-blue-50 p-3 rounded-lg text-center flex flex-col items-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-                    <svg
-                      className="w-5 h-5 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-blue-600 font-medium mb-1">
-                    Completed
-                  </p>
-                  <p className="text-xl font-bold text-blue-900 leading-tight">
-                    {workinfo?.jobDone || 0}
-                  </p>
-                </div>
-
-                <div className="bg-blue-50 p-3 rounded-lg text-center flex flex-col items-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-                    <svg
-                      className="w-5 h-5 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-blue-600 font-medium mb-1">
-                    Applied
-                  </p>
-                  <p className="text-xl font-bold text-blue-900 leading-tight">
-                    {workinfo?.jobApplied || 0}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       </aside>
 
-      <main className="flex-1 p-6 bg-gray-50">
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-6 overflow-auto">
         {isAvailable ? (
           <>
             <h1 className="text-2xl font-bold mb-6 text-blue-900">
@@ -388,6 +303,89 @@ const WorkerDashboard = () => {
           </div>
         )}
       </main>
+
+<aside className="bg-gradient-to-br from-blue-50 to-blue-100 w-72 p-6 border-l border-blue-200 flex flex-col space-y-6 overflow-auto shadow-sm">
+    
+      <div className="mb-4 pb-2">
+        <div
+          className="inline-flex items-center gap-1 border-b border-blue-400"
+          style={{ paddingBottom: "0.5rem" }} 
+        >
+          <FaBriefcase className="w-5 h-5 text-blue-600 mr-2 animate-pulse" />
+          <h2
+            className="text-md font-semibold text-blue-900"
+            style={{ fontFamily: "'Courier New', Courier, monospace" }}
+          >
+            Work Statistics
+          </h2>
+        </div>
+      </div>
+
+     
+      <div className="space-y-4">
+       
+        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 flex items-center gap-4 cursor-default hover:bg-blue-50 transition">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <p
+              className="text-xs text-blue-600 font-medium uppercase"
+              style={{ fontFamily: "'Courier New', Courier, monospace" }}
+            >
+              Completed
+            </p>
+            <p className="text-xl font-bold text-blue-900">
+              {workinfo?.jobDone || 0}
+            </p>
+          </div>
+        </div>
+
+     
+        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 flex items-center gap-4 cursor-default hover:bg-purple-50 transition">
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          </div>
+          <div>
+            <p
+              className="text-xs text-purple-600 font-medium uppercase"
+              style={{ fontFamily: "'Courier New', Courier, monospace" }}
+            >
+              Applied
+            </p>
+            <p className="text-xl font-bold text-purple-900">
+              {workinfo?.jobApplied || 0}
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
     </div>
   );
 };
