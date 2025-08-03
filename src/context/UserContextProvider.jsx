@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = import.meta.env.VITE_BASE_URL
+const backendUrl = import.meta.env.VITE_BASE_URL;
 
 const UserContext = createContext();
 
@@ -8,26 +8,41 @@ export const UserContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  fetch(`${backendUrl}auth/my`, {
-    method: "GET",
-    credentials: "include",
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data?.data) setUser(data.data);
-      else setUser(null);
-    })
-    .catch(() => setUser(null))
-    .finally(() => setLoading(false));
-}, []);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`${backendUrl}auth/my`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        if (data?.data?.Worker || data?.data?.User) {
+          setUser({
+            ...data.data.Worker,
+            role: data.data.Worker ? "worker" : "user",
+          });
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
     <UserContext.Provider value={{ user, setUser, loading }}>
-      {children}
+      {!loading && children}
     </UserContext.Provider>
   );
 };
-export default UserContextProvider
+
+export default UserContextProvider;
 
 export const useUser = () => useContext(UserContext);
