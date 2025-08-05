@@ -1,10 +1,9 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
-import { FaBars, FaTimes, FaHome, FaInfoCircle, FaUserCircle } from "react-icons/fa";
+import { FaBars, FaTimes } from "react-icons/fa";
 import { useUser } from "../context/UserContextProvider.jsx";
 
-const backendUrl = import.meta.env.VITE_BASE_URL
+const backendUrl = import.meta.env.VITE_BASE_URL;
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -17,13 +16,13 @@ const Header = () => {
   }, [location]);
 
   const handleLogout = () => {
-  fetch(`${backendUrl}auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  })
-    .then(() => setUser(null))
-    .finally(() => navigate("/login"));
-};
+    fetch(`${backendUrl}auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(() => setUser(null))
+      .finally(() => navigate("/login"));
+  };
 
   if (loading) {
     return (
@@ -92,19 +91,32 @@ const SearchBar = () => (
 const NavigationLinks = ({ user, handleLogout, isMobile }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
 
   const dashboardPath = (() => {
-  if (!user || !user.role) return "/dashboard";
-  if (user.role === "worker") return "/worker-dashboard";
-  if (user.role === "user") return "/user-dashboard";
-  return "/dashboard";
-})();
+    if (!user || !user.role) return "/dashboard";
+    if (user.role === "worker") return "/worker-dashboard";
+    if (user.role === "user") return "/user-dashboard";
+    return "/dashboard";
+  })();
 
-const links = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About Us" },
-  { to: dashboardPath, label: "Dashboard" },
-];
+  const links = [
+    { to: "/", label: "Home" },
+    { to: "/about", label: "About Us" },
+    { to: dashboardPath, label: "Dashboard" },
+  ];
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <nav className={`flex ${isMobile ? "flex-col space-y-3 px-2" : "space-x-12 items-center"}`}>
@@ -113,9 +125,9 @@ const links = [
           key={to}
           to={to}
           className={({ isActive }) =>
-            (isActive
+            isActive
               ? "text-blue-600 font-medium flex items-center space-x-1"
-              : "text-gray-700 hover:text-blue-600 font-medium flex items-center space-x-1")
+              : "text-gray-700 hover:text-blue-600 font-medium flex items-center space-x-1"
           }
         >
           <span>{label}</span>
@@ -123,12 +135,12 @@ const links = [
       ))}
 
       {user ? (
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
           >
-            {user.fullName}
+            {user.fullName ? user.fullName.split(" ")[0] : "Profile"}
           </button>
 
           {dropdownOpen && (
@@ -169,6 +181,5 @@ const links = [
     </nav>
   );
 };
-
 
 export default Header;
