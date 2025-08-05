@@ -16,56 +16,52 @@ const WorkerDashboard = () => {
   const [totalEarning, setTotalEarning] = useState(0);
 
   const openApplications = async (status) => {
-    setSelectedStatus(status);
-    setShowModal(true);
+  setSelectedStatus(status);
+  setShowModal(true);
 
-    if (
-      (status === "applied" && (!workinfo?.jobApplied || workinfo.jobApplied.length === 0)) ||
-      (status === "completed" && (!workinfo?.jobDone || workinfo.jobDone.length === 0))
-    ) {
+ 
+  if (
+    (status === "applied" && (!workinfo?.JobsApplied || workinfo.JobsApplied === 0)) ||
+    (status === "completed" && (!workinfo?.JobsDone || workinfo.JobsDone === 0))
+  ) {
+    setApplications([]);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${backendUrl}job/worker/get/application`, {
+      method: "GET",
+      credentials: "include",
+      
+    });
+    console.log("viewdata", res);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
+      if (res.status === 404 && errorData?.message?.includes("0 Applications")) {
+        setApplications([]);
+        return;
+      }
+      console.error("Error from backend:", errorData);
       setApplications([]);
       return;
     }
 
-    try {
-      const res = await fetch(`${backendUrl}job/worker/get/application`, {
-        method: "GET",
-        credentials: "include",
-      });
+    const userData = await res.json();
+    let apps = userData.data?.myApplications || [];
 
-      if (!res.ok) {
-        let errorData = null;
-        try {
-          errorData = await res.json();
-        } catch {
-          errorData = { message: "Unknown error" };
-        }
+  
+    if (status === "completed") {
+    apps = apps.filter((a) => a.status === "completed");
+  } else if (status === "applied") {
+    apps = apps.filter((a) => a.status !== "completed");
+  }
 
-        if (res.status === 404 && errorData?.message?.includes("0 Applications")) {
-          setApplications([]);
-          return;
-        }
-
-        console.error("Error from backend:", errorData);
-        setApplications([]);
-        return;
-      }
-
-      const userData = await res.json();
-      let apps = userData.data?.myApplications || [];
-
-      if (status === "completed") {
-        apps = apps.filter((a) => a.jobId?.status === "completed");
-      } else if (status === "applied") {
-        apps = apps.filter((a) => a.jobId?.status !== "pending");
-      }
-
-      setApplications(apps);
-    } catch (err) {
-      console.error("Network or parsing error:", err);
-      setApplications([]);
-    }
-  };
+    setApplications(apps);
+  } catch (err) {
+    console.error("Network or parsing error:", err);
+    setApplications([]);
+  }
+};
 
   useEffect(() => {
     const fetchWorkerProfile = async () => {
@@ -111,7 +107,6 @@ const WorkerDashboard = () => {
 
         if (res.ok) {
           const data = await res.json();
-          console.log("data", data);
           setTotalEarning(data?.data?.totalEarning || 0);
         } else {
           setTotalEarning(0);
@@ -150,7 +145,7 @@ const WorkerDashboard = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
      
-      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6 overflow-auto">
+      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6 overflow-auto min-h-screen">
         <div className="flex flex-col items-center text-center p-4 bg-white rounded-xl shadow-sm border border-blue-100">
           <div className="relative mb-3">
             <img
@@ -370,61 +365,70 @@ const WorkerDashboard = () => {
       </main>
 
     
-      <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-64 w-full p-5 border-t md:border-t-0 md:border-l border-blue-200 flex flex-col space-y-5 overflow-auto shadow-sm">
-        
-        <div className="pb-2 border-b border-blue-400">
-          <div className="inline-flex items-center gap-3">
-            <FaBriefcase className="w-5 h-5 text-blue-600 animate-pulse" />
-            <h2 className="text-md font-semibold text-blue-900">Work Statistics</h2>
-          </div>
-        </div>
+     
+<aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6 overflow-auto min-h-screen">
+  <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+    <div className="pb-3 border-b border-blue-400 flex items-center gap-3 mb-4">
+      <FaBriefcase className="w-5 h-5 text-blue-600 animate-pulse" />
+      <h2
+        className="text-md font-semibold text-blue-900"
+        style={{ fontFamily: "'Courier New', Courier, monospace" }}
+      >
+        Work Statistics
+      </h2>
+    </div>
 
-        <div className="p-3 bg-white rounded-xl shadow-sm border border-green-200 flex items-center gap-3 hover:bg-blue-50 transition">
-          <div className="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-lg select-none">
-            <FaRupeeSign />
-          </div>
-          <div>
-            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Total Earnings</p>
-            <p className="text-base font-bold text-blue-900">NPR. {totalEarning}</p>
-          </div>
-        </div>
+ 
+    <div className="p-3 rounded-lg border border-green-200 flex items-center gap-3 mb-3 hover:bg-blue-50 transition">
+      <div className="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-lg select-none">
+        <FaRupeeSign />
+      </div>
+      <div className="flex flex-col">
+        <p className="text-xs text-blue-500 font-medium">Total Earnings</p>
+        <p className="text-sm text-blue-800">NPR. {totalEarning}</p>
+      </div>
+    </div>
 
-        <div className="p-3 bg-white rounded-xl shadow-sm border border-blue-200 flex items-center gap-3 hover:bg-blue-50 transition">
-          <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-lg select-none">
-            <FaCheck />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Completed</p>
-            <div className="flex items-center gap-12">
-              <p className="text-base font-bold text-blue-900">{workinfo?.jobDone || 0}</p>
-              <button
-                onClick={() => openApplications("completed")}
-                className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
-              >
-                View History
-              </button>
-            </div>
-          </div>
+   
+    <div className="p-3 rounded-lg border border-blue-200 flex items-center gap-3 mb-3 hover:bg-blue-50 transition">
+      <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-lg select-none">
+        <FaCheck />
+      </div>
+      <div className="flex flex-col flex-1">
+        <p className="text-xs text-blue-500 font-medium">Completed</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-blue-800">{workinfo?.JobsDone || 0}</p>
+          <button
+            onClick={() => openApplications("completed")}
+            className="text-xs text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
+          >
+            View History
+          </button>
         </div>
+      </div>
+    </div>
 
-        <div className="p-3 bg-white rounded-xl shadow-sm border border-purple-200 flex items-center gap-3 hover:bg-blue-50 transition">
-          <div className="w-11 h-11 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-lg select-none">
-            <FaFileAlt />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Applied</p>
-            <div className="flex items-center gap-6">
-              <p className="text-base font-bold text-blue-900">{workinfo?.jobApplied ?? 0}</p>
-              <button
-                onClick={() => openApplications("applied")}
-                className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
-              >
-                View Applications
-              </button>
-            </div>
-          </div>
+   
+    <div className="p-3 rounded-lg border border-purple-200 flex items-center gap-3 hover:bg-blue-50 transition">
+      <div className="w-11 h-11 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-lg select-none">
+        <FaFileAlt />
+      </div>
+      <div className="flex flex-col flex-1">
+        <p className="text-xs text-blue-500 font-medium">Applied</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-blue-800">{workinfo?.JobsApplied ?? 0}</p>
+          <button
+            onClick={() => openApplications("applied")}
+            className="text-xs text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
+          >
+            View Applications
+          </button>
         </div>
-      </aside>
+      </div>
+    </div>
+  </div>
+</aside>
+
 
       {showModal && (
         <div
@@ -442,17 +446,25 @@ const WorkerDashboard = () => {
               {applications.length === 0 ? (
                 <p className="text-gray-500 text-sm text-center py-6">No applications found.</p>
               ) : (
+                
                 <ul className="space-y-3">
-                  {applications.map((app) => (
-                    <li
-                      key={app._id}
-                      className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-sm border border-blue-100"
-                    >
-                      <p className="font-semibold text-blue-800">{app.jobId?.title || "No Title"}</p>
-                      <p className="text-gray-600 capitalize text-sm">Status: {app.status}</p>
-                    </li>
-                  ))}
-                </ul>
+          {applications.map((app) => (
+            <li
+              key={app._id}
+              className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-sm border border-blue-100"
+            >
+              <p className="font-semibold text-blue-800">
+                {app.jobId?.title || "No Title"}
+              </p>
+              <p className="text-gray-600 capitalize text-sm">
+                Category: {app.jobId?.category || "N/A"}
+              </p>
+              <p className="text-gray-600 capitalize text-sm">
+                Status: {app.status || "Unknown"}
+              </p>
+            </li>
+          ))}
+        </ul>
               )}
             </div>
 
