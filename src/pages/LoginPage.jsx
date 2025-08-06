@@ -72,15 +72,15 @@ const handleGoogleSignup = async () => {
         });
 
         const data = await response.json();
-    
-        if (response.ok) {
-        const userData = data.data.userLogin; 
 
+        if (response.ok) {
+        const userData = data.data.userLogin;
         setUser({
           ...userData,
           fullName: userData.fullName,
           role: "worker",
         });
+
         navigate("/worker-dashboard");
         } else {
           setErrors({ password: data.message || "Login failed" });

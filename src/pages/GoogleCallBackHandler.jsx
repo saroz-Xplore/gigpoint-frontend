@@ -15,7 +15,7 @@ const GoogleCallbackHandler = () => {
   .then((res) => res.json())
   .then((data) => {
     if (data?.data) {
-      setUser({ fullName: data.data.fullName || "User" });
+      setUser({ fullName: data.data.userLogin.fullName || "User" });
       navigate("/user-dashboard");
     } else {
       navigate("/login");
