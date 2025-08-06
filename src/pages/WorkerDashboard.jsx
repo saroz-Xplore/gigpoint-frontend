@@ -15,6 +15,14 @@ const WorkerDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [totalEarning, setTotalEarning] = useState(0);
 
+  const [ratings, setRatings] = useState([]);
+  const [loadingRatings, setLoadingRatings] = useState(true);
+  const [viewAllRating, setViewAllRating] = useState("false");
+
+  const ratingsToShow = viewAllRating ? ratings : ratings.slice(0, 4);
+
+
+
   const openApplications = async (status) => {
   setSelectedStatus(status);
   setShowModal(true);
@@ -30,11 +38,10 @@ const WorkerDashboard = () => {
 
   try {
     const res = await fetch(`${backendUrl}job/worker/get/application`, {
-      method: "GET",
-      credentials: "include",
-      
+      method:"GET",
+     credentials: "include"
     });
-    console.log("viewdata", res);
+  
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
       if (res.status === 404 && errorData?.message?.includes("0 Applications")) {
@@ -117,9 +124,29 @@ const WorkerDashboard = () => {
       }
     };
 
+    const fetchRecentRatings = async () => {
+      try {
+        const res = await fetch(`${backendUrl}rating/recent`, {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setRatings(data.data || []);
+        } else {
+          setRatings([]);
+        }
+      } catch (error) {
+        console.error("Error fetching ratings:", error);
+        setRatings([]);
+      } finally {
+        setLoadingRatings(false);
+      }
+    };
+
     fetchWorkerProfile();
     fetchRecommendedWorks();
     fetchWorkerEarning();
+    fetchRecentRatings();
   }, []);
 
   const handleWorkClick = (work) => {
@@ -364,121 +391,208 @@ const WorkerDashboard = () => {
         )}
       </main>
 
-    
-     
-<aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6 overflow-auto min-h-screen">
-  <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
-    <div className="pb-3 border-b border-blue-400 flex items-center gap-3 mb-4">
-      <FaBriefcase className="w-5 h-5 text-blue-600 animate-pulse" />
-      <h2
-        className="text-md font-semibold text-blue-900"
-        style={{ fontFamily: "'Courier New', Courier, monospace" }}
-      >
-        Work Statistics
-      </h2>
-    </div>
+{/* RIGHT SIDEBAR */}
+<aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-0 md:border-l border-blue-200 flex flex-col min-h-screen">
 
- 
-    <div className="p-3 rounded-lg border border-green-200 flex items-center gap-3 mb-3 hover:bg-blue-50 transition">
-      <div className="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-lg select-none">
-        <FaRupeeSign />
+  {/* Work Statistics */}
+  <div className="p-5">
+    <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+      <div className="items-center mb-3 border-b border-blue-400 inline-flex gap-3">
+        <FaBriefcase className="w-5 h-5 text-blue-600 animate-pulse" />
+        <h2 className="text-md font-semibold text-blue-900">Work Statistics</h2>
       </div>
-      <div className="flex flex-col">
-        <p className="text-xs text-blue-500 font-medium">Total Earnings</p>
-        <p className="text-sm text-blue-800">NPR. {totalEarning}</p>
-      </div>
-    </div>
 
-   
-    <div className="p-3 rounded-lg border border-blue-200 flex items-center gap-3 mb-3 hover:bg-blue-50 transition">
-      <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-lg select-none">
-        <FaCheck />
-      </div>
-      <div className="flex flex-col flex-1">
-        <p className="text-xs text-blue-500 font-medium">Completed</p>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-blue-800">{workinfo?.JobsDone || 0}</p>
-          <button
-            onClick={() => openApplications("completed")}
-            className="text-xs text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
-          >
-            View History
-          </button>
+      {/* Total Earnings */}
+      <div className="p-3 rounded-lg border border-green-200 flex items-center gap-3 mb-3 hover:bg-blue-50 transition">
+        <div className="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-lg">
+          <FaRupeeSign />
+        </div>
+        <div className="flex flex-col">
+          <p className="text-xs text-blue-500 font-medium">Total Earnings</p>
+          <p className="text-sm text-blue-800">NPR. {totalEarning}</p>
         </div>
       </div>
-    </div>
 
-   
-    <div className="p-3 rounded-lg border border-purple-200 flex items-center gap-3 hover:bg-blue-50 transition">
-      <div className="w-11 h-11 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-lg select-none">
-        <FaFileAlt />
+      {/* Completed Jobs */}
+      <div className="p-3 rounded-lg border border-blue-200 flex items-center gap-3 mb-3 hover:bg-blue-50 transition">
+        <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-lg">
+          <FaCheck />
+        </div>
+        <div className="flex flex-col flex-1">
+          <p className="text-xs text-blue-500 font-medium">Completed</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-blue-800">{workinfo?.JobsDone || 0}</p>
+            <button
+              onClick={() => openApplications("completed")}
+              className="text-xs text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
+            >
+              View History
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="flex flex-col flex-1">
-        <p className="text-xs text-blue-500 font-medium">Applied</p>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-blue-800">{workinfo?.JobsApplied ?? 0}</p>
-          <button
-            onClick={() => openApplications("applied")}
-            className="text-xs text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
-          >
-            View Applications
-          </button>
+
+      {/* Applied Jobs */}
+      <div className="p-3 rounded-lg border border-purple-200 flex items-center gap-3 hover:bg-blue-50 transition">
+        <div className="w-11 h-11 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-lg">
+          <FaFileAlt />
+        </div>
+        <div className="flex flex-col flex-1">
+          <p className="text-xs text-blue-500 font-medium">Applied</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-blue-800">{workinfo?.JobsApplied ?? 0}</p>
+            <button
+              onClick={() => openApplications("applied")}
+              className="text-xs text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
+            >
+              View Applications
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  {/* Ratings Section - FULL WIDTH */}
+  {/* Container for toggle + ratings */}
+<div className="flex flex-col w-full">
+
+  {/* Toggle button aligned right above ratings */}
+  <div className="flex justify-end p-2 pr-4">
+    <button
+      onClick={() => setViewAllRating(!viewAllRating)}
+      className="text-blue-800 text-xs hover:underline"
+    >
+      {viewAllRating ? "Hide All Ratings" : `View All Ratings (${ratingsToShow.length})`}
+    </button>
+  </div>
+
+  {/* Ratings Section */}
+  <div className="flex flex-col bg-white rounded-t-xl shadow-lg border-t border-blue-200 flex-1 overflow-hidden w-full">
+
+    {/* Average Rating */}
+    <div className="p-3 border-b border-gray-200 flex items-center gap-3">
+      <div className="w-11 h-11 bg-yellow-100 rounded-full flex items-center justify-center text-blue-500 text-lg select-none">
+        ⭐
+      </div>
+      <div className="flex flex-col flex-1">
+        <p className="text-xs text-blue-500 font-medium">Rating (Avg)</p>
+        <p className="text-xs text-blue-800">
+          {ratings.length > 0
+            ? (ratings.reduce((acc, r) => acc + r.point, 0) / ratings.length).toFixed(1) + " ⭐"
+            : "No ratings yet"}
+        </p>
+      </div>
+    </div>
+
+    {/* Ratings List */}
+    <div className={`flex-1 overflow-auto p-3 space-y-3 ${viewAllRating ? "max-h-64" : "max-h-48"}`}>
+      {(viewAllRating ? ratingsToShow : ratingsToShow.slice(0, 4)).map((r) => (
+        <div
+          key={r._id}
+          className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg shadow"
+        >
+          <img
+            src={r.raterUserId?.profilePicture || "/default-avatar.png"}
+            alt={r.raterUserId?.fullName}
+            className="w-10 h-10 rounded-full object-cover border border-gray-300"
+          />
+          <div className="flex flex-col flex-1">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-blue-900">
+                {r.raterUserId?.fullName || "Anonymous"}
+              </p>
+              <p className="text-blue-500 font-semibold">{r.point} ⭐</p>
+            </div>
+            <p className="text-xs text-gray-600 mt-1">{r.comment || "No comment"}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+  </div>
 </aside>
 
 
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black/10 flex justify-center items-center z-50 transition-opacity"
-          style={{ backdropFilter: "blur(2px)" }}
+     {showModal && (
+  <div
+    className="fixed inset-0 flex justify-center items-center z-50 bg-black/20 backdrop-blur-[2px]"
+  >
+    <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-[420px] max-h-[80vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 hover:scale-[1.01]">
+      
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3 flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-white tracking-wide">
+          {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Applications
+        </h2>
+        <button
+          onClick={() => setShowModal(false)}
+          className="text-white text-xl font-bold hover:scale-110 transition-transform"
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-[420px] max-h-[80vh] overflow-hidden transform transition-all scale-95 hover:scale-100 duration-200">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-center items-center relative">
-              <h2 className="text-xl font-semibold text-blue-900 text-center">
-                {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Applications
-              </h2>
-            </div>
+          ✕
+        </button>
+      </div>
 
-            <div className="p-6 overflow-auto max-h-[60vh] space-y-3">
-              {applications.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-6">No applications found.</p>
-              ) : (
-                
-                <ul className="space-y-3">
-          {applications.map((app) => (
-            <li
-              key={app._id}
-              className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-sm border border-blue-100"
-            >
-              <p className="font-semibold text-blue-800">
-                {app.jobId?.title || "No Title"}
-              </p>
-              <p className="text-gray-600 capitalize text-sm">
-                Category: {app.jobId?.category || "N/A"}
-              </p>
-              <p className="text-gray-600 capitalize text-sm">
-                Status: {app.status || "Unknown"}
-              </p>
-            </li>
-          ))}
-        </ul>
-              )}
-            </div>
+      {/* Content */}
+      <div className="p-5 overflow-auto flex-1 bg-gray-50 space-y-3">
+        {applications.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-6">
+            No applications found.
+          </p>
+        ) : (
+               <ul className="space-y-3">
+        {applications.map((app) => (
+          <li
+            key={app._id}
+            className="p-4 bg-white rounded-lg shadow hover:shadow-md transition border border-gray-100"
+          >
+            {/* Job Title */}
+            <p className="font-semibold text-base">
+              <span className="text-blue-800">Title:</span>{" "}
+              <span className="text-gray-600">{app.jobId?.title || "No Title"}</span>
+            </p>
 
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <button
-                onClick={() => setShowModal(false)}
-                className="w-full bg-red-500 text-white py-2.5 rounded-lg font-medium hover:bg-red-600 transition"
+            {/* Category */}
+            <p className="font-semibold text-base mt-1">
+              <span className="text-blue-800">Category:</span>{" "}
+              <span className="text-gray-600">{app.jobId?.category || "N/A"}</span>
+            </p>
+
+            {/* Applied Date + Status in Same Row */}
+            <div className="flex justify-between items-center mt-2 text-xs text-gray-600">
+              <p>⏳ Applied on: {new Date(app.createdAt).toLocaleDateString()}</p>
+              <span
+                className={`text-xs font-medium px-3 py-1 rounded-full ${
+                  app.status === "completed"
+                    ? "bg-green-100 text-green-700"
+                    : app.status === "pending"
+                    ? "bg-blue-100 text-blue-500"
+                    : "bg-red-100 text-red-700"
+                }`}
               >
-                Close
-              </button>
+                {app.status || "Unknown"}
+              </span>
             </div>
-          </div>
-        </div>
-      )}
+          </li>
+        ))}
+      </ul>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t bg-gray-50">
+        <button
+          onClick={() => setShowModal(false)}
+          className="w-full bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
