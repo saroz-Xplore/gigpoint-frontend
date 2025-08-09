@@ -1,7 +1,10 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { useUser } from "../context/UserContextProvider.jsx";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"
 
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
@@ -9,7 +12,6 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, setUser, loading } = useUser();
-  
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -85,22 +87,26 @@ const Header = () => {
 const Logo = () => (
   <Link to="/" className="flex items-center space-x-2">
     <i className="fas fa-bolt text-blue-600 text-3xl"></i>
-    <span className="text-2xl font-extrabold text-blue-600 font-serif">GigPoint</span>
+    <span className="text-2xl font-extrabold text-blue-600 font-serif">
+      GigPoint
+    </span>
   </Link>
 );
 
-const SearchBar = () => {
+
+const SearchBar = ({ navigate }) => {
   const [query, setQuery] = useState("");
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [loadingJobDetails, setLoadingJobDetails] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (!query.trim()) {
       setJobs([]);
-      setSelectedJob(null);
+      setShowResults(false);
       return;
     }
 
@@ -120,6 +126,7 @@ const SearchBar = () => {
         );
         const data = await res.json();
         setJobs(data.data?.result || []);
+        setShowResults(true);
       } catch (err) {
         console.error(err);
         setJobs([]);
@@ -144,8 +151,7 @@ const SearchBar = () => {
       });
       const data = await res.json();
       setSelectedJob(data.data);
-      setJobs([]);
-      setQuery(data.data.title);
+      setShowResults(false);
     } catch (err) {
       console.error(err);
       setSelectedJob(null);
@@ -154,112 +160,303 @@ const SearchBar = () => {
     }
   };
 
+  const handleApply = (e) => {
+    e.stopPropagation();
+    navigate(`/worker-dashboard/apply/${selectedJob._id}`);
+    closeModal();
+  };
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setJobs([]);
+        setShowResults(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const closeModal = () => {
+    setSelectedJob(null);
+    setQuery("");
+    setJobs([]);
+  };
+
   return (
-  <div className="relative w-full max-w-full md:max-w-xl flex flex-col px-2 md:px-0" ref={dropdownRef}>
-    <div className="relative w-full">
-      <input
-        type="text"
-        placeholder="Search for services..."
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setSelectedJob(null);
-        }}
-        className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      {loadingJobs && (
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <svg
-            className="animate-spin h-5 w-5 text-blue-600"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            ></path>
-          </svg>
+    <div className="relative w-full max-w-full md:max-w-xl" ref={dropdownRef}>
+      <div className="relative w-full">
+        <div className="flex items-center relative">
+          <input
+            type="text"
+            placeholder="Search services, jobs, gigs..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedJob(null);
+            }}
+            onFocus={() => jobs.length > 0 && setShowResults(true)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            {loadingJobs ? (
+              <svg
+                className="animate-spin h-5 w-5 text-blue-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+            ) : (
+              <svg
+                className="h-5 w-5 text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            )}
+          </div>
         </div>
+
+        {/* Search Results Dropdown */}
+        {showResults && (
+          <div className="absolute z-40 mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+            {loadingJobs ? (
+              <div className="flex justify-center items-center py-6">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : jobs.length > 0 ? (
+              <>
+                <div className="py-1 max-h-96 overflow-y-auto">
+                  {jobs.map((job) => (
+                    <div
+                      key={job._id}
+                      onClick={() => fetchJobDetails(job._id)}
+                      className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            {job.title}
+                          </h4>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {job.category && (
+                              <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                {job.category}
+                              </span>
+                            )}
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                              {job.address}
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            job.status === "open"
+                              ? "bg-green-100 text-green-800"
+                              : job.status === "searching"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {job.status}
+                        </span>
+                      </div>
+                      {job.priceRange && (
+                        <p className="mt-2 text-sm font-medium text-green-600">
+                          NPR {job.priceRange.initial} - {job.priceRange.end}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="px-4 py-2 bg-gray-50 text-sm text-gray-500 border-t border-gray-200">
+                  {jobs.length} {jobs.length === 1 ? "result" : "results"} found
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <div className="mx-auto w-24 h-24 text-gray-400 mb-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-700">
+                  No jobs found
+                </h3>
+                <p className="mt-1 text-gray-500">
+                  Try different search terms or check back later
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Job Details Modal */}
+      {selectedJob && (
+        <>
+          <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm z-40"></div>
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200 transform transition-all">
+              <div className="p-6">
+                {loadingJobDetails ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">
+                          {selectedJob.title}
+                        </h2>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              selectedJob.status === "searching"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {selectedJob.status}
+                          </span>
+                          {selectedJob.priority && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              {selectedJob.priority} priority
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={closeModal}
+                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h3 className="font-medium text-gray-700">
+                            Location
+                          </h3>
+                          <p className="mt-1 text-gray-900">
+                            {selectedJob.address}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-700">
+                            Price Range
+                          </h3>
+                          <p className="mt-1 text-green-600 font-medium">
+                            NPR {selectedJob.priceRange?.initial} -{" "}
+                            {selectedJob.priceRange?.end}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-medium text-gray-700">
+                          Description
+                        </h3>
+                        <p className="mt-1 text-gray-900 whitespace-pre-line">
+                          {selectedJob.description || "No description provided"}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h3 className="font-medium text-gray-700">
+                            Posted On
+                          </h3>
+                          <p className="mt-1 text-gray-900">
+                            {new Date(
+                              selectedJob.createdAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-700">
+                            Last Updated
+                          </h3>
+                          <p className="mt-1 text-gray-900">
+                            {new Date(
+                              selectedJob.updatedAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        onClick={closeModal}
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                      >
+                        Close
+                      </button>
+                      <button
+                        onClick={handleApply}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Apply Now
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
-
-    {!loadingJobs && jobs.length > 0 && (
-      <ul className="absolute z-50 bg-white border border-gray-300 rounded-b-md shadow w-full max-h-64 overflow-auto mt-1 top-full left-0">
-        {jobs.map((job) => (
-            <li
-              key={job._id}
-              className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
-              onClick={() => fetchJobDetails(job._id)}  
-            >
-              <div className="flex justify-between">
-                <span className="font-semibold">{job.title}</span>
-                <span className="italic text-gray-600">{job.status}</span>
-              </div>
-            </li>
-        ))}
-      </ul>
-    )}
-
-    {selectedJob && (
-      <div className="relative mt-4 p-6 bg-white rounded-lg shadow-lg border border-blue-300 space-y-3">
-        <button
-          onClick={() => setSelectedJob(null)}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
-          aria-label="Close selected job"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        <h3 className="text-2xl font-bold text-blue-700">{selectedJob.title}</h3>
-        <p className="italic text-gray-700">{selectedJob.description}</p>
-
-        <div className="flex flex-wrap gap-4 text-gray-800">
-          <div><strong>Category:</strong> {selectedJob.category || "N/A"}</div>
-          <div><strong>Status:</strong> {selectedJob.status || "N/A"}</div>
-          <div><strong>Priority:</strong> {selectedJob.priority || "N/A"}</div>
-        </div>
-
-        <div>
-          <strong>Price Range:</strong>{" "}
-          <span className="text-green-600 font-semibold">
-            NPR {selectedJob.priceRange?.initial ?? "N/A"} - {selectedJob.priceRange?.end ?? "N/A"}
-          </span>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-
-}
+  );
+};
 
 const NavigationLinks = ({ user, handleLogout, isMobile }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);

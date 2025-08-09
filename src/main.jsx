@@ -18,7 +18,6 @@ import ForgotPassword from './pages/ForgotPassword.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
 import ChangePassword from './components/ChangePassword.jsx'
 import ApplyForm from './components/applyform.jsx'
-import SearchResultsPage from './pages/SearchResultsPage.jsx'
 
 
 
@@ -93,14 +92,6 @@ const router = createBrowserRouter([
       {
         path: "/worker-dashboard/apply/:id",
         element: <ApplyForm />
-      },
-      {
-        path: "/worker-dashboard/apply/:id",
-        element: <ApplyForm />
-      },
-      {
-        path: "/jobs/search",
-        element: <SearchResultsPage />
       },
       {
         path: "*", 
