@@ -25,30 +25,9 @@ const LoginPage = () => {
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 
-const handleGoogleSignup = async () => {
-  try {
-    const res = await fetch(`${backendUrl}oauth/google`, {
-      method: "GET",
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      throw new Error("Google signup failed");
-    }
-
-    const data = await res.json();
-
-    if (data.success) {
-      navigate("/user-dashboard"); 
-    } else {
-      alert(data.message || "Google signup failed!");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("❌ Google signup failed. Please try again.");
-  }
+const handleGoogleSignup = () => {
+  window.location.href = `${backendUrl}oauth/google`;
 };
-
 
   const handleWorkerLogin = async () => {
     let errors = {};
@@ -66,13 +45,17 @@ const handleGoogleSignup = async () => {
       try {
         const response = await fetch(`${backendUrl}auth/login`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json"
+          },
           credentials: "include",
           body: JSON.stringify({ email, password }),
         });
 
         const data = await response.json();
-
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem("accessToken", data.data.accessToken);
+          localStorage.setItem("refreshToken", data.data.refreshToken);
         if (response.ok) {
         const userData = data.data.userLogin;
         setUser({
@@ -152,7 +135,7 @@ const handleGoogleSignup = async () => {
               </p>
               <button
                 onClick={handleGoogleSignup}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
               >
                 <FcGoogle className="text-xl" />
                 <span className="font-medium">Continue with Google</span>

@@ -19,10 +19,12 @@ const WorkerDashboard = () => {
   const [viewAllRating, setViewAllRating] = useState("false");
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("accessToken")
+
   const ratingsToShow = (ratings || []).slice(0, viewAllRating ? ratings.length : 2);
 
 
-  const openApplications = async (status) => {
+   const openApplications = async (status) => {
   setSelectedStatus(status);
   setShowModal(true);
 
@@ -38,7 +40,10 @@ const WorkerDashboard = () => {
   try {
     const res = await fetch(`${backendUrl}job/worker/get/application`, {
       method:"GET",
-     credentials: "include"
+      headers: {
+     "Authorization": `Bearer ${token}`,
+     "Content-Type": "application/json"
+      }
     });
   
     if (!res.ok) {
@@ -55,7 +60,6 @@ const WorkerDashboard = () => {
     const userData = await res.json();
     let apps = userData.data?.myApplications || [];
 
-  
     if (status === "completed") {
     apps = apps.filter((a) => a.status === "completed");
   } else if (status === "applied") {
@@ -89,13 +93,18 @@ const WorkerDashboard = () => {
     const fetchRecommendedWorks = async () => {
       try {
         const res = await fetch(`${backendUrl}job/recomendJob`, {
+          method: 'GET',
           credentials: "include",
+          headers: {
+            "Authorization" : `Bearer ${token}`,
+            "Content-Type" : "application/json",
+          }
         });
         if (res.ok) {
           const data = await res.json();
           setRecommendedWorks((data.data.forExperienced)? data.data.forExperienced: data.data.forBelowExperienced);
         } else {
-          setRecommendedWorks(["aauisj"]);
+          setRecommendedWorks([]);
         }
       } catch (err) {
         console.error("Error fetching recommended works:", err);
@@ -104,11 +113,17 @@ const WorkerDashboard = () => {
         setLoadingWorks(false);
       }
     };
+      
 
     const fetchWorkerEarning = async () => {
       try {
         const res = await fetch(`${backendUrl}auth/workerReports`, {
+          method: "GET",
           credentials: "include",
+          headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+          }
         });
 
         if (res.ok) {
@@ -126,11 +141,16 @@ const WorkerDashboard = () => {
     const fetchRecentRatings = async () => {
       try {
         const res = await fetch(`${backendUrl}rating/recent`, {
+          method:"GET",
           credentials: "include",
+          headers:{
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+          }
         });
         if (res.ok) {
           const data = await res.json();
-          setRatings(data.data || []);
+          setRatings(data.data);
         } else {
           setRatings([]);
         }
@@ -371,20 +391,19 @@ const WorkerDashboard = () => {
       </div>
 
      
-      <div className="flex items-start">
-        <div className="flex-shrink-0 pt-1">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3M12 3a9 9 0 110 18 9 9 0 010-18z" />
-    </svg>
-        </div>
-       <div className="ml-3">
-  <p className="text-xs text-blue-500 font-medium">Experience</p>
-  <p className="text-sm text-blue-800">
-    {worker?.experienceYear ? `${worker?.experienceYear} years` : "Not provided"}
+          <div className="flex items-start">
+            <div className="flex-shrink-0 pt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3M12 3a9 9 0 110 18 9 9 0 010-18z" />
+        </svg>
+            </div>
+          <div className="ml-3">
+      <p className="text-xs text-blue-500 font-medium">Experience</p>
+      <p className="text-sm text-blue-800">
+        {worker?.experienceYear ? `${worker?.experienceYear} years` : "Not provided"}
 
-  </p>
-</div>
-
+      </p>
+    </div>
       </div>
           </div>
         </div>
@@ -401,16 +420,15 @@ const WorkerDashboard = () => {
               <p className="text-gray-500">No recommended works available.</p>
             ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10 p-4">
-        {recommendedWorks.map((job) => (
+        {recommendedWorks.map((job) =>
+          job._id && job.title ?
+          (
           <div
             key={job._id}
             className="relative overflow-hidden rounded-xl bg-blue-50 border border-blue-100 shadow-md hover:shadow-xl transition-all flex flex-col"
           >
-          
             <div className="h-2 bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-300 w-full" />
-
             <div className="flex-grow p-2 flex flex-col">
-              
               <div className="flex justify-between items-start mb-3">
                 <h2 className="text-lg font-semibold text-blue-900 truncate">
                   {job.title}
@@ -427,13 +445,11 @@ const WorkerDashboard = () => {
             {job.priority}
           </span>
         </div>
-
         
         <p className="text-xs text-gray-700 mb-3 line-clamp-3 italic">
           {job.description}
         </p>
 
-              
                 <div className="text-sm text-gray-800 space-y-1 mb-4">
           <p className="flex items-center gap-2">
             <FaFolder className="text-blue-800" />
@@ -443,12 +459,16 @@ const WorkerDashboard = () => {
             <FaMapMarkedAlt className="text-blue-800" />
             <span className="font-medium text-blue-800">Address:</span> {job.address}
           </p>
+          <div className="flex items-center gap-6">
           <p className="flex items-center gap-2">
             <FaRupeeSign className="text-blue-800"/>
             <span className="font-medium text-blue-800">Price:</span> NPR {job.priceRange?.initial} - {job.priceRange?.end}
           </p>
+          <p className="flex items-center gap-1 text-xs text-gray-600 italic ml-7">
+        Created: {job.createdAt?.slice(0, 10)}
+      </p>
+      </div>
         </div>
-
      
         <div className="flex items-center gap-3 mt-auto pt-4 border-t border-blue-500">
           <img
@@ -474,11 +494,11 @@ const WorkerDashboard = () => {
                       </button>
               </div>
             </div>
-
         
             <div className="h-2 bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-300 w-full" />
           </div>
-        ))}
+        ):null
+        )}
       </div>
             )}
 
@@ -492,10 +512,8 @@ const WorkerDashboard = () => {
 
 
 
-<aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-l border-blue-200 flex flex-col space-y-6 overflow-hidden min-h-screen">
-
-
-  <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+    <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-l border-blue-200 flex flex-col space-y-6 overflow-hidden min-h-screen">
+      <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
   
     <div className="items-center mb-3 pb-2 border-b border-blue-400 inline-flex gap-3">
       <FaBriefcase className="w-5 h-5 text-blue-600 animate-pulse" />
@@ -571,28 +589,27 @@ const WorkerDashboard = () => {
   </div>
 
  
-  <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-yellow-50 mb-4 hover:bg-yellow-100 transition">
-    <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-lg">
-      <FaChartLine className="text-yellow-600 text-xl" />
-    </div>
-    <div className="flex flex-col">
-      <p className="text-sm text-blue-500 font-medium">Average Rating</p>
-      {ratings.length > 0 ? (
-  <div className="flex items-center gap-1 text-yellow-500 text-xs font-semibold">
-    <span>
-      {(ratings.reduce((acc, r) => acc + r.point, 0) / ratings.length).toFixed(1)}
-    </span>
-    <FaStar />
-  </div>
-) : (
-  <p className="text-xs text-yellow-800 font-semibold">No ratings yet</p>
-)}
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-yellow-50 mb-4 hover:bg-yellow-100 transition">
+        <div className="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center text-lg">
+          <FaChartLine className="text-yellow-600 text-xl" />
+        </div>
+        <div className="flex flex-col">
+          <p className="text-sm text-blue-500 font-medium">Average Rating</p>
+          {ratings.length > 0 ? (
+      <div className="flex items-center gap-1 text-yellow-500 text-xs font-semibold">
+        <span>
+          {(ratings.reduce((acc, r) => acc + r.point, 0) / ratings.length).toFixed(1)}
+        </span>
+        <FaStar />
+      </div>
+    ) : (
+      <p className="text-xs text-yellow-800 font-semibold">No ratings yet</p>
+    )}
 
     </div>
   </div>
 
- 
-  
+
 <div className="flex flex-col space-y-3 max-h-64 overflow-auto">
   {ratingsToShow.map((r) => (
     <div

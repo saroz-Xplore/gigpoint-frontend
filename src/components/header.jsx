@@ -16,13 +16,28 @@ const Header = () => {
   }, [location]);
 
   const handleLogout = () => {
-    fetch(`${backendUrl}auth/logout`, {
-      method: "POST",
-      credentials: "include",
+  fetch(`${backendUrl}auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then(() => {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('theme');
+      localStorage.removeItem('workerPosts');
+
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('@@auth0spajs@@')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      setUser(null);
     })
-      .then(() => setUser(null))
-      .finally(() => navigate("/login"));
-  };
+    .finally(() => navigate("/login"));
+};
+
 
   if (loading) {
     return (
