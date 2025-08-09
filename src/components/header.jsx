@@ -240,7 +240,7 @@ const SearchBar = ({ navigate }) => {
 
         {/* Search Results Dropdown */}
         {showResults && (
-          <div className="absolute z-40 mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+          <div className="absolute z-40 mt-1 w-full bg-white/80 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/50 overflow-hidden">
             {loadingJobs ? (
               <div className="flex justify-center items-center py-6">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -326,7 +326,7 @@ const SearchBar = ({ navigate }) => {
       {/* Job Details Modal */}
       {selectedJob && (
         <>
-          <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm z-40"></div>
+          <div className="fixed inset-0 bg-blend-color-burn bg-opacity-80 backdrop-blur-sm z-40"></div>
           <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200 transform transition-all">
               <div className="p-6">
