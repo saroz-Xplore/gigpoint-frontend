@@ -14,11 +14,11 @@ import {
   FaLeaf,
   FaGitAlt,
   FaGithub,
-  FaGoogle, 
+  FaGoogle,
+  FaDocker,        
 } from "react-icons/fa";
 import { SiTailwindcss } from "react-icons/si";
 import Slideshow from "../components/Slideshow";
-
 
 const AboutPage = () => {
   return (
@@ -104,11 +104,11 @@ const AboutPage = () => {
               Icon={FaGoogle}
               label="Google 2.5 Flash LLM"
               color="text-green-600"
-            />{" "}
-          
+            />
             <TechItem Icon={FaLeaf} label="MongoDB" color="text-green-700" />
             <TechItem Icon={FaGitAlt} label="Git" color="text-orange-500" />
             <TechItem Icon={FaGithub} label="GitHub" color="text-gray-800" />
+            <TechItem Icon={FaDocker} label="Docker" color="text-blue-600" />
           </div>
         </div>
       </div>
