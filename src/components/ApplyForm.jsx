@@ -9,6 +9,7 @@ export default function JobApplicationForm() {
   const [statusMessage, setStatusMessage] = useState(""); 
   const navigate = useNavigate();
   const messageBoxRef = useRef();
+  
 
   const backendUrl = import.meta.env.VITE_BASE_URL
 
