@@ -292,7 +292,11 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
   }, []);
 
   return (
-    <nav className={`flex ${isMobile ? "flex-col space-y-3 px-2" : "space-x-12 items-center"}`}>
+    <nav
+      className={`flex ${
+        isMobile ? "flex-col space-y-3 px-2" : "space-x-12 items-center"
+      }`}
+    >
       {links.map(({ to, label }) => (
         <NavLink
           key={to}
@@ -311,9 +315,23 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+            className="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 border-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {user.fullName ? user.fullName.split(" ")[0] : "Profile"}
+            {user.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt="Profile"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/default-avatar.png";
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                {user.fullName ? user.fullName.charAt(0).toUpperCase() : "P"}
+              </div>
+            )}
           </button>
 
           {dropdownOpen && (
@@ -344,7 +362,9 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
           to="/login"
           className={({ isActive }) =>
             `px-4 py-2 rounded-full font-medium transition ${
-              isActive ? "bg-blue-700 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
+              isActive
+                ? "bg-blue-700 text-white"
+                : "bg-blue-600 text-white hover:bg-blue-700"
             }`
           }
         >
