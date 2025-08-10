@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function JobApplicationForm() {
   const [message, setMessage] = useState("");
@@ -9,7 +9,10 @@ export default function JobApplicationForm() {
   const [statusMessage, setStatusMessage] = useState(""); 
   const navigate = useNavigate();
   const messageBoxRef = useRef();
+
+  const { id } = useParams();
   
+const token = localStorage.getItem('accessToken')
 
   const backendUrl = import.meta.env.VITE_BASE_URL
 
@@ -50,16 +53,17 @@ export default function JobApplicationForm() {
 
    
     try {
-  const response = await fetch(`${backendUrl}job/worker/apply/${jobId}`, {
+  const response = await fetch(`${backendUrl}job/worker/apply/${id}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify({ message, estimatedPrice }),
   });
 
   const data = await response.json();
-
+  console.log('response', data);
   if (response.ok) {
     if (data.status === "already_requested") {
       setStatusMessage("already_requested");

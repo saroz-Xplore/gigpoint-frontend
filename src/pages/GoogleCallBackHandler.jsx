@@ -4,13 +4,17 @@ import { useUser } from "../context/UserContextProvider.jsx";
 
 const backendUrl = import.meta.env.VITE_BASE_URL
 
+
 const GoogleCallbackHandler = () => {
   const { setUser } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
   fetch(`${backendUrl}auth/my`, {
-  credentials: "include",
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+    'Content-Type': 'application/json',
+  }
 })
   .then((res) => res.json())
   .then((data) => {

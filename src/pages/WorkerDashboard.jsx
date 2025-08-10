@@ -23,12 +23,10 @@ const WorkerDashboard = () => {
 
   const ratingsToShow = (ratings || []).slice(0, viewAllRating ? ratings.length : 2);
 
-
-   const openApplications = async (status) => {
+  const openApplications = async (status) => {
   setSelectedStatus(status);
   setShowModal(true);
 
- 
   if (
     (status === "applied" && (!workinfo?.JobsApplied || workinfo.JobsApplied === 0)) ||
     (status === "completed" && (!workinfo?.JobsDone || workinfo.JobsDone === 0))
@@ -38,17 +36,26 @@ const WorkerDashboard = () => {
   }
 
   try {
-    const res = await fetch(`${backendUrl}job/worker/get/application`, {
-      method:"GET",
+    let url = "";
+    if (status === "completed") {
+      url = `${backendUrl}job/myCompleted`;
+
+    } else if (status === "applied") {
+      url = `${backendUrl}job/worker/get/application`;
+    }
+
+    console.log("Fetching applications for status:", status);
+    const res = await fetch(url, {
+      method: "GET",
       headers: {
-     "Authorization": `Bearer ${token}`,
-     "Content-Type": "application/json"
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
     });
-  
+
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
-      if (res.status === 404 && errorData?.message?.includes("0 Applications")) {
+      if (res.status === 404) {
         setApplications([]);
         return;
       }
@@ -58,15 +65,14 @@ const WorkerDashboard = () => {
     }
 
     const userData = await res.json();
-    let apps = userData.data?.myApplications || [];
 
     if (status === "completed") {
-    apps = apps.filter((a) => a.status === "completed");
-  } else if (status === "applied") {
-    apps = apps.filter((a) => a.status !== "completed");
-  }
-
-    setApplications(apps);
+      setApplications(userData.data|| []);
+    } else if (status === "applied") {
+      let apps = userData.data?.myApplications || [];
+      apps = apps.filter((a) => a.status !== "completed");
+      setApplications(apps);
+    }
   } catch (err) {
     console.error("Network or parsing error:", err);
     setApplications([]);
@@ -566,7 +572,7 @@ const WorkerDashboard = () => {
                             onClick={() =>
                               navigate(`/worker-dashboard/apply/${job._id}`)
                             }
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm cursor-pointer"
                           >
                             Apply Now
                           </button>
