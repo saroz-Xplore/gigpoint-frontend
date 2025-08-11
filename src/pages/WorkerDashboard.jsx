@@ -38,7 +38,7 @@ const WorkerDashboard = () => {
   try {
     let url = "";
     if (status === "completed") {
-      url = `${backendUrl}job/myCompleted`;
+      url = `${backendUrl}auth/myCompleted`;
 
     } else if (status === "applied") {
       url = `${backendUrl}job/worker/get/application`;
@@ -78,7 +78,6 @@ const WorkerDashboard = () => {
     setApplications([]);
   }
 };
-
   useEffect(() => {
     const fetchWorkerProfile = async () => {
       try {
@@ -759,7 +758,7 @@ const WorkerDashboard = () => {
               <h2 className="text-lg font-semibold text-white tracking-wide">
                 {selectedStatus.charAt(0).toUpperCase() +
                   selectedStatus.slice(1)}{" "}
-                Applications
+                {selectedStatus === "completed" ? "Jobs" : "Applications"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -772,9 +771,44 @@ const WorkerDashboard = () => {
             <div className="p-5 overflow-auto flex-1 bg-gray-50 space-y-3">
               {applications.length === 0 ? (
                 <p className="text-gray-500 text-sm text-center py-6">
-                  No applications found.
+                  No {selectedStatus === "completed" ? "jobs" : "applications"}{" "}
+                  found.
                 </p>
+              ) : selectedStatus === "completed" ? (
+                // Completed jobs rendering
+                <ul className="space-y-3">
+                  {applications.map((job) => (
+                    <li
+                      key={job._id}
+                      className="p-4 bg-white rounded-lg shadow hover:shadow-md transition border border-gray-100"
+                    >
+                      <p className="font-semibold text-base">
+                        <span className="text-blue-800">Title:</span>{" "}
+                        <span className="text-gray-600">
+                          {job.title || "No Title"}
+                        </span>
+                      </p>
+                      <p className="font-semibold text-base mt-1">
+                        <span className="text-blue-800">Priority:</span>{" "}
+                        <span className="text-gray-600">
+                          {job.priority || "N/A"}
+                        </span>
+                      </p>
+                      <p className="font-semibold text-base mt-1">
+                        <span className="text-blue-800">Address:</span>{" "}
+                        <span className="text-gray-600">
+                          {job.address || "N/A"}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-600 mt-2">
+                        Posted on:{" "}
+                        {new Date(job.createdAt).toLocaleDateString()}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               ) : (
+                // Applied applications rendering (your existing code)
                 <ul className="space-y-3">
                   {applications.map((app) => (
                     <li
