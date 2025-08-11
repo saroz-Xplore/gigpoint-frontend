@@ -58,7 +58,7 @@ const Header = () => {
         <div className="flex justify-between items-center py-4">
           <Logo />
           <div className="flex flex-1 mx-4 md:mx-8">
-            <SearchBar />
+            <SearchBar user ={user} navigate={navigate} />
           </div>
           <div className="hidden md:flex items-center space-x-6">
             <NavigationLinks user={user} handleLogout={handleLogout} />
@@ -75,7 +75,7 @@ const Header = () => {
 
         {isMobileMenuOpen && (
           <div className="md:hidden flex flex-col space-y-4 py-4">
-            <SearchBar />
+            <SearchBar user = {user} navigate={navigate}/>
             <NavigationLinks user={user} handleLogout={handleLogout} isMobile />
           </div>
         )}
@@ -94,7 +94,7 @@ const Logo = () => (
 );
 
 
-const SearchBar = ({ navigate }) => {
+const SearchBar = ({ user, navigate }) => {
   const [query, setQuery] = useState("");
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -102,6 +102,7 @@ const SearchBar = ({ navigate }) => {
   const [loadingJobDetails, setLoadingJobDetails] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const dropdownRef = useRef(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!query.trim()) {
@@ -139,6 +140,7 @@ const SearchBar = ({ navigate }) => {
   }, [query]);
 
   const fetchJobDetails = async (jobId) => {
+    setErrorMessage("");
     setLoadingJobDetails(true);
     try {
       const res = await fetch(`${backendUrl}job/get/${jobId}`, {
@@ -162,9 +164,35 @@ const SearchBar = ({ navigate }) => {
 
   const handleApply = (e) => {
     e.stopPropagation();
+    setErrorMessage(""); 
+
+    if (!user || !user.skills) {
+      setErrorMessage("You are not eligible for this job to apply. Please select a job related to your skills.");
+      return;
+    }
+
+    if (!selectedJob || !selectedJob.category) {
+      setErrorMessage("No job selected or job category missing.");
+      return;
+    }
+
+    const jobCategories = selectedJob.category.toLowerCase().split(",").map(c => c.trim());
+    const userSkills = user.skills.map(skill => skill.toLowerCase().trim());
+
+    const isMatch = jobCategories.some(cat => userSkills.includes(cat));
+
+    if (!isMatch) {
+      setErrorMessage(
+        "You are not eligible for this job to apply. Please select a job related to your skills."
+      );
+      return;
+    }
+
+  
     navigate(`/worker-dashboard/apply/${selectedJob._id}`);
     closeModal();
   };
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -180,6 +208,7 @@ const SearchBar = ({ navigate }) => {
     setSelectedJob(null);
     setQuery("");
     setJobs([]);
+    setErrorMessage("");
   };
 
   return (
@@ -191,6 +220,7 @@ const SearchBar = ({ navigate }) => {
             placeholder="Search services, jobs, gigs..."
             value={query}
             onChange={(e) => {
+              setErrorMessage("");
               setQuery(e.target.value);
               setSelectedJob(null);
             }}
@@ -433,16 +463,22 @@ const SearchBar = ({ navigate }) => {
                       </div>
                     </div>
 
+                    {errorMessage && (
+                  <div className="mb-4 text-red-600 font-semibold">
+                    {errorMessage}
+                  </div>
+                )}
+
                     <div className="mt-6 flex justify-end space-x-3">
                       <button
                         onClick={closeModal}
-                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors cursor-pointer"
                       >
                         Close
                       </button>
                       <button
                         onClick={handleApply}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
                       >
                         Apply Now
                       </button>
