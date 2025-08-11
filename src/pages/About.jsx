@@ -14,19 +14,19 @@ import {
   FaLeaf,
   FaGitAlt,
   FaGithub,
-  FaGoogle, 
+  FaGoogle,
+  FaDocker,        
 } from "react-icons/fa";
 import { SiTailwindcss } from "react-icons/si";
 import Slideshow from "../components/Slideshow";
 
-
 const AboutPage = () => {
   return (
     <div className="bg-white font-sans">
-      {/* About GigPoint Section */}
+     
       <div className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start gap-12">
-          {/* Text Side */}
+         
           <div className="md:w-1/2">
             <h1 className="text-3xl font-extrabold text-blue-600 tracking-wide font-serif mb-2">
               About GigPoint
@@ -54,14 +54,14 @@ const AboutPage = () => {
             </p>
           </div>
 
-          {/* Image Side */}
+         
           <div className="md:w-1/2">
             <Slideshow />
           </div>
         </div>
       </div>
 
-      {/* Tech Stack Section */}
+      
       <div className="bg-blue-50 py-16">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-blue-800 mb-8 text-center">
@@ -104,16 +104,16 @@ const AboutPage = () => {
               Icon={FaGoogle}
               label="Google 2.5 Flash LLM"
               color="text-green-600"
-            />{" "}
-            {/* ✅ fixed */}
+            />
             <TechItem Icon={FaLeaf} label="MongoDB" color="text-green-700" />
             <TechItem Icon={FaGitAlt} label="Git" color="text-orange-500" />
             <TechItem Icon={FaGithub} label="GitHub" color="text-gray-800" />
+            <TechItem Icon={FaDocker} label="Docker" color="text-blue-600" />
           </div>
         </div>
       </div>
 
-      {/* Meet Our Developers Section */}
+      
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-blue-800 mb-4">

@@ -27,17 +27,39 @@ const WorkerDashboard = () => {
   setSelectedStatus(status);
   setShowModal(true);
 
+<<<<<<< HEAD
   try {
     let url = "";
     if (status === "completed") {
       url = `${backendUrl}auth/myCompleted`;
+=======
+  if (
+    (status === "applied" && (!workinfo?.JobsApplied || workinfo.JobsApplied === 0)) ||
+    (status === "completed" && (!workinfo?.JobsDone || workinfo.JobsDone === 0))
+  ) {
+    setApplications([]);
+    return;
+  }
+
+  try {
+    let url = "";
+    if (status === "completed") {
+      url = `${backendUrl}job/myCompleted`;
+
+>>>>>>> 5292aa3ae7516be3c144a461e3abba25d7612ddc
     } else if (status === "applied") {
       url = `${backendUrl}job/worker/get/application`;
     }
 
+<<<<<<< HEAD
     const res = await fetch(url, {
       method: "GET",
       credentials: "include",
+=======
+    console.log("Fetching applications for status:", status);
+    const res = await fetch(url, {
+      method: "GET",
+>>>>>>> 5292aa3ae7516be3c144a461e3abba25d7612ddc
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
@@ -45,14 +67,30 @@ const WorkerDashboard = () => {
     });
 
     if (!res.ok) {
+<<<<<<< HEAD
+=======
+      const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
+      if (res.status === 404) {
+        setApplications([]);
+        return;
+      }
+      console.error("Error from backend:", errorData);
+>>>>>>> 5292aa3ae7516be3c144a461e3abba25d7612ddc
       setApplications([]);
       return;
     }
 
     const userData = await res.json();
+<<<<<<< HEAD
     if (status === "completed") {
       setApplications(userData.data || []);
     } else {
+=======
+
+    if (status === "completed") {
+      setApplications(userData.data|| []);
+    } else if (status === "applied") {
+>>>>>>> 5292aa3ae7516be3c144a461e3abba25d7612ddc
       let apps = userData.data?.myApplications || [];
       apps = apps.filter((a) => a.status !== "completed");
       setApplications(apps);
@@ -736,6 +774,7 @@ const WorkerDashboard = () => {
         </div>
       </aside>
 
+<<<<<<< HEAD
    {showModal && (
   <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/20 backdrop-blur-[2px]">
     <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-[420px] max-h-[80vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 hover:scale-[1.01]">
@@ -837,6 +876,85 @@ const WorkerDashboard = () => {
     </div>
   </div>
 )}
+=======
+      {showModal && (
+        <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/20 backdrop-blur-[2px]">
+          <div className="bg-white rounded-xl shadow-2xl w-[90vw] max-w-[420px] max-h-[80vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 hover:scale-[1.01]">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3 flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-white tracking-wide">
+                {selectedStatus.charAt(0).toUpperCase() +
+                  selectedStatus.slice(1)}{" "}
+                Applications
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-white text-xl font-bold hover:scale-110 transition-transform"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-auto flex-1 bg-gray-50 space-y-3">
+              {applications.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center py-6">
+                  No applications found.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {applications.map((app) => (
+                    <li
+                      key={app._id}
+                      className="p-4 bg-white rounded-lg shadow hover:shadow-md transition border border-gray-100"
+                    >
+                      <p className="font-semibold text-base">
+                        <span className="text-blue-800">Title:</span>{" "}
+                        <span className="text-gray-600">
+                          {app.jobId?.title || "No Title"}
+                        </span>
+                      </p>
+
+                      <p className="font-semibold text-base mt-1">
+                        <span className="text-blue-800">Category:</span>{" "}
+                        <span className="text-gray-600">
+                          {app.jobId?.category || "N/A"}
+                        </span>
+                      </p>
+
+                      <div className="flex justify-between items-center mt-2 text-xs text-gray-600">
+                        <p>
+                          ⏳ Applied on:{" "}
+                          {new Date(app.createdAt).toLocaleDateString()}
+                        </p>
+                        <span
+                          className={`text-xs font-medium px-3 py-1 rounded-full ${
+                            app.status === "completed"
+                              ? "bg-green-100 text-green-700"
+                              : app.status === "pending"
+                              ? "bg-blue-100 text-blue-500"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {app.status || "Unknown"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t bg-gray-50">
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> 5292aa3ae7516be3c144a461e3abba25d7612ddc
     </div>
   );
 };
