@@ -574,7 +574,7 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
                   setDropdownOpen(false);
                   navigate("/update-profile");
                 }}
-                className="w-full text-left px-4 py-2 hover:bg-indigo-100"
+                className="w-full text-left px-4 py-2 hover:bg-indigo-100 cursor-pointer"
               >
                 Update Profile
               </button>
@@ -583,7 +583,7 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
                   setDropdownOpen(false);
                   handleLogout();
                 }}
-                className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+                className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100 cursor-pointer"
               >
                 Log Out
               </button>
