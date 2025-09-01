@@ -1,33 +1,42 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContextProvider.jsx";
 
-const backendUrl = import.meta.env.VITE_BASE_URL
-
-
-const GoogleCallbackHandler = () => {
-  const { setUser } = useUser();
+const GoogleCallBackHandler = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { setUser } = useUser();
 
-  fetch(`${backendUrl}auth/my`, {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-    'Content-Type': 'application/json',
-  }
-})
-  .then((res) => res.json())
-  .then((data) => {
-    if (data?.data) {
-      setUser({ fullName: data.data.userLogin.fullName || "User" });
-      navigate("/user-dashboard");
-    } else {
-      navigate("/login");
-    }
-  })
-  .catch(() => navigate("/login"));
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/v1/auth/my", {
+          credentials: "include",
+        });
 
-  return <p>Logging you in...</p>;
+        if (res.ok) {
+          const data = await res.json();
+
+          const user = data.data.userLogin || data.data;
+          setUser({ ...user, role: user.role || "user" });
+
+          navigate("/user-dashboard");
+        } else {
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        navigate("/login");
+      }
+    };
+
+    fetchUser();
+  }, [navigate, setUser]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-700 text-lg">Logging in, please wait...</p>
+    </div>
+  );
 };
 
-export default GoogleCallbackHandler;
+export default GoogleCallBackHandler;

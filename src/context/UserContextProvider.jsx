@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const backendUrl = import.meta.env.VITE_BASE_URL;
-
 const UserContext = createContext();
 
 export const UserContextProvider = ({ children }) => {
@@ -11,17 +9,17 @@ export const UserContextProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${backendUrl}auth/my`, {
+        const res = await fetch("/api/v1/auth/my", {
           method: "GET",
           credentials: "include",
+          headers: { "Content-Type": "application/json" },
         });
-
         const data = await res.json();
-        if (data?.data?.Worker || data?.data?.User) {
-          setUser({
-            ...data.data.Worker,
-            role: data.data.Worker ? "worker" : "user",
-          });
+      
+        if (data?.data?.userLogin) {
+          setUser({ ...data.data.userLogin, role: data.data.userLogin.role || "user" });
+        } else if (data?.data?.Worker) {
+          setUser({ ...data.data.Worker, role: "worker" });
         } else {
           setUser(null);
         }
@@ -43,6 +41,5 @@ export const UserContextProvider = ({ children }) => {
   );
 };
 
-export default UserContextProvider;
-
 export const useUser = () => useContext(UserContext);
+export default UserContextProvider;
