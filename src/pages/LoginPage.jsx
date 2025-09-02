@@ -4,7 +4,7 @@ import { FaUser, FaTools, FaLock, FaEnvelope } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { useUser } from "../context/UserContextProvider.jsx";
 
-const backendUrl = import.meta.env.VITE_BASE_URL;
+const backendUrl = import.meta.env.VITE_BASE_URL
 
 const LoginPage = () => {
   const [role, setRole] = useState("");
@@ -26,37 +26,37 @@ const LoginPage = () => {
 
 
 const handleGoogleSignup = () => {
-  window.location.href = `${backendUrl}oauth/google`;
+  window.location.href = "/api/v1/oauth/google"
 };
 
   const handleWorkerLogin = async () => {
-    let errors = {};
+  let errors = {};
 
-    if (!email) errors.email = "Email is required";
-    else if (!validateEmail(email)) errors.email = "Invalid email address";
+  if (!email) errors.email = "Email is required";
+  else if (!validateEmail(email)) errors.email = "Invalid email address";
 
-    if (!password) errors.password = "Password is required";
-    else if (password.length < 6)
-      errors.password = "Password must be at least 6 characters";
+  if (!password) errors.password = "Password is required";
+  else if (password.length < 6)
+    errors.password = "Password must be at least 6 characters";
 
-    setErrors(errors);
+  setErrors(errors);
 
-    if (Object.keys(errors).length === 0) {
-      try {
-        const response = await fetch(`${backendUrl}auth/login`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        });
+  if (Object.keys(errors).length === 0) {
+    try {
+      const response = await fetch(`${backendUrl}auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
 
-        const data = await response.json();
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem("accessToken", data.data.accessToken);
-          localStorage.setItem("refreshToken", data.data.refreshToken);
-        if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.data) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("accessToken", data.data.accessToken);
+        localStorage.setItem("refreshToken", data.data.refreshToken);
+
         const userData = data.data.userLogin;
         setUser({
           ...userData,
@@ -65,15 +65,16 @@ const handleGoogleSignup = () => {
         });
 
         navigate("/worker-dashboard");
-        } else {
-          setErrors({ password: data.message || "Login failed" });
-        }
-      } catch (error) {
-        console.error("Network error:", error);
-        setErrors({ password: "Something went wrong. Please try again." });
+      } else {
+        setErrors({ password: data.message || "Login failed" });
       }
+    } catch (error) {
+      console.error("Network error:", error);
+      setErrors({ password: "Something went wrong. Please try again." });
     }
-  };
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

@@ -183,7 +183,7 @@ const SearchBar = ({ user, navigate }) => {
 
     if (!isMatch) {
       setErrorMessage(
-        "You are not eligible for this job to apply. Please select a job related to your skills."
+        "**You are not eligible for this job to apply. Please select a job related to your skills.**"
       );
       return;
     }

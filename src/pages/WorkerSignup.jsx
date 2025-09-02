@@ -1,15 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaUserCircle,
-  FaBriefcase,
-  FaCheckCircle,
-  FaExclamationCircle,
-  FaSpinner,
-  FaCloudUploadAlt,
-  FaTimes,
-  FaChevronDown,
-} from "react-icons/fa";
+import {FaUserCircle,FaBriefcase,FaCheckCircle,FaExclamationCircle,FaSpinner,FaCloudUploadAlt,FaTimes,FaChevronDown,} from "react-icons/fa";
 
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
@@ -209,17 +200,17 @@ const WorkerSignup = () => {
             {/* Right Side (Form) */}
             <div className="md:w-3/5 p-6 md:p-8">
               {successMessage ? (
-                <div className="text-center p-6 bg-green-50 rounded-lg">
+                <div className="text-center p-6 bg-green-50 rounded-lg mt-32">
                   <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
                   <h3 className="text-xl font-bold text-green-800 mb-2">
-                    Registration Successful!
+                    Registered Successful!
                   </h3>
                   <p className="text-green-600 mb-4">
                     You can now login to your account.
                   </p>
                   <button
                     onClick={() => navigate("/login?role=worker")}
-                    className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition"
+                    className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition cursor-pointer"
                   >
                     Go to Login
                   </button>
@@ -676,7 +667,7 @@ const WorkerSignup = () => {
                     <div className="pt-2">
                       <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:opacity-90 transition flex items-center justify-center"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:opacity-90 transition flex items-center justify-center cursor-pointer"
                         disabled={loading}
                       >
                         {loading ? (
