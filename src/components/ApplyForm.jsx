@@ -90,12 +90,14 @@ const token = localStorage.getItem('accessToken')
           >
             {statusMessage === "submitted" ? (
               <>
+              <div className="border-2 bg-blue-100 p-3 rounded-2xl">
                 <h2 className="text-xl font-semibold text-green-700">
                   ✅ Application Submitted
                 </h2>
                 <p className="text-gray-600 mt-1">
                   Your application was submitted successfully.
                 </p>
+                </div>
               </>
             ) : (
               <div className="border-2 bg-blue-100 p-3 rounded-2xl">

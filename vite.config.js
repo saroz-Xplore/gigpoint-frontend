@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api/v1/auth/": {
+      "/api/v1/": {
         target: "https://gigpoint-backend.onrender.com",
         changeOrigin: true,
         secure: false,

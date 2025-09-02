@@ -17,7 +17,7 @@ const Dashboard = () => {
 
         <button
           onClick={() => navigate("/login")}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold shadow transition"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold shadow transition cursor-pointer"
         >
           Go to Login Page
         </button>
