@@ -1,6 +1,6 @@
 import React from "react";
 
-const LeftSidebar = ({ worker, workinfo, isAvailable, toggleAvailability }) => {
+const LeftSidebar = ({ worker, workinfo, isWorker = false, isAvailable, toggleAvailability }) => {
   return (
     <aside className="bg-gradient-to-br from-blue-50 to-blue-100 md:w-72 w-full p-6 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col space-y-6 overflow-auto min-h-screen">
       <div className="flex flex-col items-center text-center p-4 bg-white rounded-xl shadow-sm border border-blue-100">
@@ -14,15 +14,17 @@ const LeftSidebar = ({ worker, workinfo, isAvailable, toggleAvailability }) => {
               e.target.src = "/default-avatar.png";
             }}
           />
-          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-            <div
-              className={`p-1 rounded-full ${
-                isAvailable ? "bg-green-400" : "bg-gray-300"
-              } border-2 border-white`}
-            >
-              <div className="w-3 h-3 rounded-full bg-white"></div>
+          {isWorker && (
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+              <div
+                className={`p-1 rounded-full ${
+                  isAvailable ? "bg-green-400" : "bg-gray-300"
+                } border-2 border-white`}
+              >
+                <div className="w-3 h-3 rounded-full bg-white"></div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <h2 className="text-xl font-bold text-blue-900 mb-1 px-2 py-1 rounded-md max-w-full truncate">
@@ -35,25 +37,27 @@ const LeftSidebar = ({ worker, workinfo, isAvailable, toggleAvailability }) => {
           {worker?.profession || worker?.role || "Professional"}
         </p>
 
-        <div className="w-full bg-blue-50 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <span
-              className="text-sm font-medium text-blue-800"
-              style={{ fontFamily: "'Courier New', Courier, monospace" }}
-            >
-              Availability
-            </span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isAvailable}
-                onChange={toggleAvailability}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-            </label>
+        {isWorker && (
+          <div className="w-full bg-blue-50 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <span
+                className="text-sm font-medium text-blue-800"
+                style={{ fontFamily: "'Courier New', Courier, monospace" }}
+              >
+                Availability
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAvailable}
+                  onChange={toggleAvailability}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+              </label>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100 overflow-auto">
