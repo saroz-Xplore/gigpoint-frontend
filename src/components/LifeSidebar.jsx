@@ -190,6 +190,8 @@ const LeftSidebar = ({ worker, workinfo, isWorker = false, isAvailable, toggleAv
               </p>
             </div>
           </div>
+
+          {isWorker && (
           <div className="flex items-start">
             <div className="flex-shrink-0 pt-1">
               <svg
@@ -210,16 +212,16 @@ const LeftSidebar = ({ worker, workinfo, isWorker = false, isAvailable, toggleAv
             <div className="ml-3">
               <p className="text-xs text-blue-500 font-medium">Skills</p>
               <p className="text-sm text-blue-800">
-                {worker?.skills?.length
-                  ? worker.skills.join(", ")
-                  : "Not provided"}
+                {worker?.skills?.length ? worker.skills.join(", ") : "Not provided"}
               </p>
             </div>
           </div>
+        )}
 
-          <div className="flex items-start">
-            <div className="flex-shrink-0 pt-1">
-              <svg
+          {isWorker && (
+  <div className="flex items-start">
+    <div className="flex-shrink-0 pt-1">
+       <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-5 h-5 text-blue-400"
                 fill="none"
@@ -233,16 +235,15 @@ const LeftSidebar = ({ worker, workinfo, isWorker = false, isAvailable, toggleAv
                   d="M12 8v4l3 3M12 3a9 9 0 110 18 9 9 0 010-18z"
                 />
               </svg>
-            </div>
+              </div>
             <div className="ml-3">
               <p className="text-xs text-blue-500 font-medium">Experience</p>
               <p className="text-sm text-blue-800">
-                {worker?.experienceYear
-                  ? `${worker?.experienceYear} years`
-                  : "Not provided"}
+                {worker?.experienceYear ? `${worker.experienceYear} years` : "Not provided"}
               </p>
             </div>
           </div>
+        )}
         </div>
       </div>
     </aside>

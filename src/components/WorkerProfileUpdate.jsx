@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
-const WorkerProfileUpdate = () => {
+const WorkerProfileUpdate = ({ isWorker = true }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     address: "",
@@ -27,23 +27,29 @@ const WorkerProfileUpdate = () => {
         const data = await res.json();
 
         setFormData({
-          address: data.data.Worker.address || "",
-          phoneNo: data.data.Worker.phoneNo || "",
-          skills: Array.isArray(data.data.Worker.skills)
-            ? data.data.Worker.skills.join(", ")
+          address: data.data.Worker?.address || data.data.User?.address || "",
+          phoneNo: data.data.Worker?.phoneNo || data.data.User?.phoneNo || "",
+          skills: isWorker
+            ? Array.isArray(data.data.Worker?.skills)
+              ? data.data.Worker.skills.join(", ")
+              : ""
             : "",
         });
 
         setOriginalData({
-          address: data.data.Worker.address || "",
-          phoneNo: data.data.Worker.phoneNo || "",
-          skills: Array.isArray(data.data.Worker.skills)
-            ? data.data.Worker.skills.join(", ")
+          address: data.data.Worker?.address || data.data.User?.address || "",
+          phoneNo: data.data.Worker?.phoneNo || data.data.User?.phoneNo || "",
+          skills: isWorker
+            ? Array.isArray(data.data.Worker?.skills)
+              ? data.data.Worker.skills.join(", ")
+              : ""
             : "",
         });
 
-        if (data.data.Worker.profilePicture) {
-          setImagePreview(data.data.Worker.profilePicture);
+        if (data.data.Worker?.profilePicture || data.data.User?.profilePicture) {
+          setImagePreview(
+            data.data.Worker?.profilePicture || data.data.User?.profilePicture
+          );
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -51,7 +57,7 @@ const WorkerProfileUpdate = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [isWorker]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -196,60 +202,59 @@ const WorkerProfileUpdate = () => {
     />
   </div>
 ))}
-         <div className="flex flex-col gap-1">
-  <label className="font-medium text-blue-700 text-sm">Skills</label>
+      
+         {isWorker && (
+  <div className="flex flex-col gap-1">
+    <label className="font-medium text-blue-700 text-sm">Skills</label>
+    <select
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value && !formData.skills.split(",").includes(value)) {
+          setFormData((prev) => ({
+            ...prev,
+            skills: prev.skills ? `${prev.skills},${value}` : value,
+          }));
+        }
+        e.target.value = "";
+      }}
+      className="p-2 border border-blue-300 rounded-md focus:ring-1 focus:ring-blue-400 focus:outline-none text-sm"
+    >
+      <option value="">Select Skill</option>
+      <option value="plumber">Plumber</option>
+      <option value="electrician">Electrician</option>
+      <option value="cleaner">Cleaner</option>
+      <option value="saloon">Saloon</option>
+      <option value="carpentry">Carpentry</option>
+      <option value="driver">Driver</option>
+      <option value="homeRenovation">Home Renovation</option>
+    </select>
 
-  <select
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value && !formData.skills.split(",").includes(value)) {
-        setFormData((prev) => ({
-          ...prev,
-          skills: prev.skills
-            ? `${prev.skills},${value}`
-            : value,
-        }));
-      }
-      e.target.value = ""; 
-    }}
-    className="p-2 border border-blue-300 rounded-md focus:ring-1 focus:ring-blue-400 focus:outline-none text-sm"
-  >
-    <option value="">Select Skill</option>
-    <option value="plumber">Plumber</option>
-    <option value="electrician">Electrician</option>
-    <option value="cleaner">Cleaner</option>
-    <option value="saloon">Saloon</option>
-    <option value="carpentry">Carpentry</option>
-    <option value="driver">Driver</option>
-    <option value="homeRenovation">Home Renovation</option>
-  </select>
-
-  
-  <div className="flex flex-wrap gap-2 mt-2">
-    {formData.skills &&
-      formData.skills.split(",").map((skill, idx) => (
-        <span
-          key={idx}
-          className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full flex items-center gap-2 text-sm shadow-sm"
-        >
-          {skill}
-          <button
-            type="button"
-            onClick={() => {
-              const updated = formData.skills
-                .split(",")
-                .filter((s) => s !== skill)
-                .join(",");
-              setFormData((prev) => ({ ...prev, skills: updated }));
-            }}
-            className="text-blue-500 hover:text-red-500"
+    <div className="flex flex-wrap gap-2 mt-2">
+      {formData.skills &&
+        formData.skills.split(",").map((skill, idx) => (
+          <span
+            key={idx}
+            className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full flex items-center gap-2 text-sm shadow-sm"
           >
-            ×
-          </button>
-        </span>
-      ))}
+            {skill}
+            <button
+              type="button"
+              onClick={() => {
+                const updated = formData.skills
+                  .split(",")
+                  .filter((s) => s !== skill)
+                  .join(",");
+                setFormData((prev) => ({ ...prev, skills: updated }));
+              }}
+              className="text-blue-500 hover:text-red-500"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+    </div>
   </div>
-</div>
+)}
 
           <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mt-6">
             <button

@@ -569,15 +569,20 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
 
           {dropdownOpen && (
             <div className="absolute bg-white shadow-md rounded border mt-2 right-0 w-44 z-50">
-              <button
-                onClick={() => {
-                  setDropdownOpen(false);
+                          <button
+              onClick={() => {
+                setDropdownOpen(false);
+                if (user.role === "worker") {
                   navigate("/update-profile");
-                }}
-                className="w-full text-left px-4 py-2 hover:bg-indigo-100 cursor-pointer"
-              >
-                Update Profile
-              </button>
+                } else {
+                  navigate("/update-profile-user");
+                }
+              }}
+              className="w-full text-left px-4 py-2 hover:bg-indigo-100 cursor-pointer"
+            >
+              Update Profile
+            </button>
+
               <button
                 onClick={() => {
                   setDropdownOpen(false);
