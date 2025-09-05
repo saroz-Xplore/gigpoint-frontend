@@ -86,10 +86,15 @@ const router = createBrowserRouter([
       },
 
       {
-        path: "/update-profile",
-        element: <WorkerProfileUpdate />,
-        errorElement: <ErrorPage />,
-      },
+          path: "/update-profile",
+          element: <WorkerProfileUpdate isWorker={true} />,
+          errorElement: <ErrorPage />,
+        },
+        {
+          path: "/update-profile-user",
+          element: <WorkerProfileUpdate isWorker={false} />,
+          errorElement: <ErrorPage />,
+        },
       {
         path: "/forgot-password",
         element: <ForgotPassword />,

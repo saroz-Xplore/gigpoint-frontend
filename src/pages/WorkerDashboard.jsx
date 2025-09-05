@@ -200,7 +200,7 @@ const WorkerDashboard = () => {
         <LeftSidebar 
         worker={worker}
         workinfo={workinfo} 
-        isWorker={true} 
+        isWorker= {true} 
         isAvailable={isAvailable} 
         toggleAvailability={toggleAvailability} 
         />
