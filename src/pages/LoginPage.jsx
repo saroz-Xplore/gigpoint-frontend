@@ -29,7 +29,7 @@ const handleGoogleSignup = () => {
   window.location.href = "/api/v1/oauth/google"
 };
 
-  const handleWorkerLogin = async () => {
+const handleWorkerLogin = async () => {
   let errors = {};
 
   if (!email) errors.email = "Email is required";
@@ -58,13 +58,22 @@ const handleGoogleSignup = () => {
         localStorage.setItem("refreshToken", data.data.refreshToken);
 
         const userData = data.data.userLogin;
+
+        // Set user from backend response
         setUser({
           ...userData,
           fullName: userData.fullName,
-          role: "worker",
+          role: userData.role, // use actual role from backend
         });
 
-        navigate("/worker-dashboard");
+        // Redirect based on role
+        if (userData.role === "worker") {
+          navigate("/worker-dashboard");
+        } else if (userData.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard"); // fallback for normal users
+        }
       } else {
         setErrors({ password: data.message || "Login failed" });
       }
@@ -74,6 +83,7 @@ const handleGoogleSignup = () => {
     }
   }
 };
+
 
 
   return (

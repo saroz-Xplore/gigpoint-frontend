@@ -13,7 +13,8 @@ const UserDashboard = () => {
   const [showJobs, setShowJobs] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showCreateJob, setShowCreateJob] = useState(false);
-  const [deletingJobId, setDeletingJobId] = useState(null);
+
+  const token = localStorage.getItem("accessToken");
 
   const [jobForm, setJobForm] = useState({
     title: "",
@@ -37,6 +38,10 @@ const UserDashboard = () => {
         const res = await fetch(`${backendUrl}auth/my`, {
           method: "GET",
           credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
         if (!res.ok) {
           navigate("/login");
@@ -64,6 +69,10 @@ const UserDashboard = () => {
     try {
       const res = await fetch(`${backendUrl}job/user/get/jobs`, {
         credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       setJobs(Array.isArray(data.data.myJobsPost) ? data.data.myJobsPost : []);
@@ -124,7 +133,10 @@ const handleDeleteJob = async (jobId) => {
       const res = await fetch(`${backendUrl}job/user/create`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(jobForm),
       });
       if (res.ok) {
@@ -154,6 +166,10 @@ const handleDeleteJob = async (jobId) => {
     try {
       const res = await fetch(`${backendUrl}job/user/apply/view/${jobId}`, {
         credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       const data = await res.json();
       setApplications((prev) => ({ ...prev, [jobId]: data.data || [] }));

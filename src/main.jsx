@@ -18,6 +18,7 @@ import ForgotPassword from './pages/ForgotPassword.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
 import ChangePassword from './components/ChangePassword.jsx'
 import ApplyForm from './components/applyform.jsx'
+import Admin from "./pages/AdminDashboard.jsx";
 
 
 
@@ -29,6 +30,15 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <HomePage />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/admin",
+        element: (
+           
+            <Admin />
+      
+        ),
         errorElement: <ErrorPage />,
       },
       {
@@ -92,14 +102,14 @@ const router = createBrowserRouter([
       },
       {
         path: "/profile/change-password",
-        element: <ChangePassword />
+        element: <ChangePassword />,
       },
       {
         path: "/worker-dashboard/apply/:id",
-        element: <ApplyForm />
+        element: <ApplyForm />,
       },
       {
-        path: "*", 
+        path: "*",
         element: <ErrorPage />,
       },
     ],
