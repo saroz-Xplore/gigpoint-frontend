@@ -13,6 +13,10 @@ const UserDashboard = () => {
   const [showJobs, setShowJobs] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showCreateJob, setShowCreateJob] = useState(false);
+  const [deletingJobId, setDeletingJobId] = useState(null);
+  const [approvedApps, setApprovedApps] = useState([]); 
+  
+
 
   const token = localStorage.getItem("accessToken");
 
@@ -87,7 +91,7 @@ const handleDeleteJob = async (jobId) => {
   setDeletingJobId(jobId); // start loading
 
   try {
-    const res = await fetch(`${backendUrl}api/v1/job/user/delete/${jobId}`, {
+    const res = await fetch(`${backendUrl}job/user/delete/${jobId}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -106,6 +110,57 @@ const handleDeleteJob = async (jobId) => {
     setDeletingJobId(null); // stop loading
   }
 };
+
+// Call this function wherever needed
+const approveApplication = async (jobId, applicationId) => {
+  try {
+    const res = await fetch(`${backendUrl}job/user/approve/${jobId}`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ applicationId }),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      return {
+    job: data.data.job,
+    allApplications: data.data.allApplications || [],
+  };// { job, application }
+    } else {
+      throw new Error(data.message || "Approval failed");
+    }
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+const handleApprove = async (jobId, appId) => {
+  try {
+    const result = await approveApplication(jobId, appId);
+
+    setSuccessMessage("Application Approved Successfully");
+    setTimeout(() => setSuccessMessage(""), 4000);
+
+    // ✅ Remove from pending (applications)
+    setApplications((prev) => ({
+      ...prev,
+      [jobId]: prev[jobId].filter((a) => a._id !== appId),
+    }));
+
+    // ✅ Add to approved history
+    if (result.application) {
+      setApprovedApps((prev) => [...prev, result.application]);
+    }
+  } catch (err) {
+    console.error("Approval failed:", err);
+  }
+};
+
 
 
   // Validate form
@@ -172,11 +227,21 @@ const handleDeleteJob = async (jobId) => {
         },
       });
       const data = await res.json();
-      setApplications((prev) => ({ ...prev, [jobId]: data.data || [] }));
-    } catch (err) {
-      console.error("Error fetching applications:", err);
+       let apps = [];
+    if (Array.isArray(data.data.allApplications)) {
+      apps = data.data.allApplications;
+    } else if (data.data.allApplications) {
+      apps = [data.data.allApplications];
     }
-  };
+
+    setApplications((prev) => ({
+      ...prev,
+      [jobId]: apps,
+    }));
+  } catch (err) {
+    console.error("Error fetching applications:", err);
+  }
+};
 
   // Handle deadline change
   const handleDeadlineChange = (e) => {
@@ -327,8 +392,8 @@ const handleDeleteJob = async (jobId) => {
               <p className="text-gray-500 text-sm text-center py-3">
                 No jobs created yet.
               </p>
-            ) : (
-              jobs.map((job) => (
+            ) : 
+            (jobs.map((job) => (
   <div
     key={job._id}
     className="bg-white hover:shadow-lg transition rounded-xl p-3 border border-gray-200"
@@ -371,25 +436,75 @@ const handleDeleteJob = async (jobId) => {
   )}
 </button>
 </div>
-    {applications[job._id] && (
-      <div className="mt-2 bg-gray-50 border rounded-md p-2 shadow-inner">
-        <h4 className="text-xs font-semibold mb-1 text-gray-700">
-          Applications ({applications[job._id].length})
-        </h4>
-        {applications[job._id].length === 0 ? (
-          <p className="text-xs text-gray-500">No applications yet.</p>
-        ) : (
-          applications[job._id].map((app) => (
-            <p
-              key={app._id}
-              className="text-xs text-gray-700 truncate flex items-center"
+
+   <div className="mt-2 bg-gray-50 border border-blue-800 rounded-md p-2 shadow-inner">
+  <h4 className="text-xs font-semibold mb-1 text-gray-700">
+    Applications ({applications[job._id]?.length || 0})
+  </h4>
+
+  {/* ✅ Show message if empty */}
+  {(!applications[job._id] || applications[job._id].length === 0) && (
+    <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
+      📭 No applications received yet.
+    </div>
+  )}
+
+  {/* ✅ Map applications only if there are some */}
+  {applications[job._id] &&
+    applications[job._id].length > 0 &&
+    applications[job._id].map((app) => (
+      <div
+        key={app._id}
+        className="flex items-center justify-between px-2 py-1 bg-white mb-1 rounded-md"
+      >
+        <div className="border border-blue-400 rounded-xl p-4 mb-3 shadow-sm bg-white hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            {/* Worker Details */}
+            <div>
+              <h4 className="text-sm font-semibold text-blue-700 flex items-center">
+                👷 {app.appliedBy?.fullName || "N/A"}
+              </h4>
+              <p className="text-xs text-gray-600">📞 {app.appliedBy?.phoneNo || "N/A"}</p>
+              <p className="text-xs text-gray-600">🏠 {app.appliedBy?.address || "N/A"}</p>
+            </div>
+
+            {/* Price */}
+            {app.estimatedPrice && (
+              <div className="text-right">
+                <p className="text-sm font-bold text-blue-600">
+                  रु {app.estimatedPrice} /-
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Message */}
+          {app.message && (
+            <div className="mt-3 text-xs text-gray-700 italic border-l-4 border-blue-300 pl-3 bg-blue-50 rounded">
+              "{app.message}"
+            </div>
+          )}
+        </div>
+
+        <div className="flex space-x-2">
+          {app.isAccepted ? (
+            <span className="text-green-600 text-xs font-semibold">
+              Approved ✅
+            </span>
+          ) : (
+            <button
+              onClick={() => handleApprove(job._id, app._id)}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded-md shadow-sm"
             >
-              👷 <span className="ml-1">{app.worker.fullName}</span>
-            </p>
-          ))
-        )}
+              Approve
+            </button>
+          )}
+        </div>
       </div>
-    )}
+    ))}
+</div>
+
+
   </div>
     ))
      )}
