@@ -15,7 +15,8 @@ const UserDashboard = () => {
   const [showCreateJob, setShowCreateJob] = useState(false);
   const [deletingJobId, setDeletingJobId] = useState(null);
   const [approvedApps, setApprovedApps] = useState([]); 
-  
+  const [showApprovedJobs, setShowApprovedJobs] = useState(false);
+
 
 
   const token = localStorage.getItem("accessToken");
@@ -123,16 +124,15 @@ const approveApplication = async (jobId, applicationId) => {
       },
       body: JSON.stringify({ applicationId }),
     });
-    const data = await res.json();
 
-    if (res.ok) {
-      return {
-    job: data.data.job,
-    allApplications: data.data.allApplications || [],
-  };// { job, application }
-    } else {
-      throw new Error(data.message || "Approval failed");
-    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Approval failed");
+
+    // Return in a simple structure for frontend
+    return {
+      job: data.data.job,
+      application: data.data.application,
+    };
   } catch (err) {
     console.error(err);
     throw err;
@@ -141,21 +141,34 @@ const approveApplication = async (jobId, applicationId) => {
 
 const handleApprove = async (jobId, appId) => {
   try {
-    const result = await approveApplication(jobId, appId);
+    const res = await approveApplication(jobId, appId);
+
+    // Pick the correct data from backend response
+    const approvedApp = res?.application || res?.data?.application;
+    const jobTitle = res?.job?.title || res?.data?.job?.title || "";
+
+    if (!approvedApp) return;
 
     setSuccessMessage("Application Approved Successfully");
     setTimeout(() => setSuccessMessage(""), 4000);
 
-    // ✅ Remove from pending (applications)
-    setApplications((prev) => ({
-      ...prev,
-      [jobId]: prev[jobId].filter((a) => a._id !== appId),
-    }));
+    // Remove from pending list
+    setApplications((prev) => {
+      const updated = { ...prev };
+      if (updated[jobId]) {
+        updated[jobId] = updated[jobId].filter((a) => a._id !== appId);
+      }
+      return updated;
+    });
 
-    // ✅ Add to approved history
-    if (result.application) {
-      setApprovedApps((prev) => [...prev, result.application]);
-    }
+    // Add to approvedApps
+    setApprovedApps((prev) => [
+      ...prev,
+      {
+        ...approvedApp,
+        title: jobTitle,
+      },
+    ]);
   } catch (err) {
     console.error("Approval failed:", err);
   }
@@ -218,6 +231,14 @@ const handleApprove = async (jobId, appId) => {
 
   // View applications
   const viewApplications = async (jobId) => {
+    if (applications[jobId]) {
+    setApplications((prev) => {
+      const updated = { ...prev };
+      delete updated[jobId];
+      return updated;
+    });
+    return;
+  }
     try {
       const res = await fetch(`${backendUrl}job/user/apply/view/${jobId}`, {
         credentials: "include",
@@ -357,7 +378,7 @@ const handleApprove = async (jobId, appId) => {
   {/* Hire Worker */}
   <button
     onClick={() => setShowCreateJob(!showCreateJob)}
-    className="w-full bg-gradient-to-r from-blue-600 to-indigo-300 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-md flex items-center justify-between"
+    className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-indigo-300 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-md flex items-center justify-between"
   >
     <span>➕ Hire Worker</span>
     <svg
@@ -385,6 +406,22 @@ const handleApprove = async (jobId, appId) => {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
     </svg>
   </button>
+
+  {/* My Approved Jobs Button */}
+<button
+  onClick={() => setShowApprovedJobs(!showApprovedJobs)}
+  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-indigo-700 text-white cursor-pointer px-4 py-2 rounded-lg font-medium shadow-md flex items-center justify-between mt-2"
+>
+  <span>✅ My Approved Jobs</span>
+  <svg
+    className={`w-4 h-4 transform transition-transform ${showApprovedJobs ? "rotate-180" : ""}`}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+  </svg>
+</button>
 
         {showJobs && (
           <div className="mt-4 space-y-3 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -438,16 +475,21 @@ const handleApprove = async (jobId, appId) => {
 </div>
 
    <div className="mt-2 bg-gray-50 border border-blue-800 rounded-md p-2 shadow-inner">
-  <h4 className="text-xs font-semibold mb-1 text-gray-700">
-    Applications ({applications[job._id]?.length || 0})
-  </h4>
+  <h4 className="text-xs font-semibold mb-2 text-gray-700">
+  Applications ({applications[job._id]?.length ?? job.applications.length})
+</h4>
+
 
   {/* ✅ Show message if empty */}
-  {(!applications[job._id] || applications[job._id].length === 0) && (
-    <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
-      📭 No applications received yet.
-    </div>
-  )}
+  {(applications[job._id] || job.applications).length === 0 ? (
+     <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
+  <p>No applications received yet.</p>
+  </div>
+) : (
+  (applications[job._id] || job.applications).map((app) => (
+    <div key={app._id}>{app.name}</div>
+  ))
+)}
 
   {/* ✅ Map applications only if there are some */}
   {applications[job._id] &&
@@ -510,6 +552,26 @@ const handleApprove = async (jobId, appId) => {
      )}
           </div>
         )}
+
+        {showApprovedJobs && (
+    <div className="mt-4 space-y-3 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      {approvedApps.length === 0 ? (
+        <p className="text-gray-500 text-sm text-center py-3">No approved applications yet.</p>
+      ) : (
+        approvedApps.map((app) => (
+          <div key={app._id} className="bg-white hover:shadow-lg transition rounded-xl p-3 border border-gray-200">
+            <h3 className="font-semibold text-sm text-green-700 truncate">{app.title}</h3>
+            <p className="text-xs text-gray-500 font-medium">💰 रु {app.estimatedPrice}</p>
+            <div className="mt-2 flex flex-col space-y-1">
+              <p>👷 {app.appliedBy?.fullName || "N/A"}</p>
+              <p>📞 {app.appliedBy?.phoneNo || "N/A"}</p>
+              <p>🏠 {app.appliedBy?.address || "N/A"}</p>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )}
       </div>
 
   {/* Job Form */}
