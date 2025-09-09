@@ -509,7 +509,7 @@ const NavigationLinks = ({ user, handleLogout, isMobile }) => {
   const links = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About Us" },
-    { to: dashboardPath, label: "Dashboard" },
+    { to: dashboardPath, label: "Dashboard" },  
   ];
 
   useEffect(() => {
