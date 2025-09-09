@@ -126,55 +126,47 @@ const approveApplication = async (jobId, applicationId) => {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Approval failed");
 
-    // Return in a simple structure for frontend
-    return {
-      job: data.data.job,
-      application: data.data.application,
-    };
+    if (data.success) {
+      const approvedJob = data.data.job;
+      setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
+      setApprovedApps((prevApproved) => [...prevApproved, approvedJob]);
+    }
+
+    return data; // ✅ return response here
   } catch (err) {
-    console.error(err);
-    throw err;
+    console.error("Approval failed:", err);
+    return null; // return null if error
   }
 };
 
 const handleApprove = async (jobId, appId) => {
   try {
     const res = await approveApplication(jobId, appId);
+    console.log("response:", res);
 
-    // Pick the correct data from backend response
-    const approvedApp = res?.application || res?.data?.application;
-    const jobTitle = res?.job?.title || res?.data?.job?.title || "";
+    if (!res?.data?.job || !res?.data?.application) return;
 
-    if (!approvedApp) return;
+    const approvedJob = res.data.job;
+    const approvedApp = res.data.application;
 
     setSuccessMessage("Application Approved Successfully");
     setTimeout(() => setSuccessMessage(""), 4000);
 
-    // Remove from pending list
-    setApplications((prev) => {
-      const updated = { ...prev };
-      if (updated[jobId]) {
-        updated[jobId] = updated[jobId].filter((a) => a._id !== appId);
-      }
-      return updated;
-    });
-
-    // Add to approvedApps
     setApprovedApps((prev) => [
       ...prev,
       {
-        ...approvedApp,
-        title: jobTitle,
+        _id: approvedJob._id,
+        title: approvedJob.title,
+        estimatedPrice: approvedJob.finalPrice,
+        approvedWorker: approvedJob.assignedTo,
+        message: approvedApp.message,
       },
     ]);
   } catch (err) {
     console.error("Approval failed:", err);
   }
 };
-
-
 
   // Validate form
   const validateForm = () => {
@@ -374,352 +366,299 @@ const handleApprove = async (jobId, appId) => {
 
           {/* ✅ Job Creation Form */}
       
-<div className="mb-8 max-w-md mx-auto flex flex-col space-y-3">
-  {/* Hire Worker */}
-  <button
-    onClick={() => setShowCreateJob(!showCreateJob)}
-    className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-indigo-300 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-md flex items-center justify-between"
-  >
-    <span>➕ Hire Worker</span>
-    <svg
-      className={`w-4 h-4 transform transition-transform ${showCreateJob ? "rotate-180" : ""}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
+<div className="max-w-5xl mx-auto mt-8 bg-gray-50 p-6 rounded-2xl shadow-xl">
+
+  {/* Tabs Header */}
+  <div className="flex border-b border-gray-300 mb-4">
+    <button
+      onClick={() => { setShowCreateJob(true); setShowJobs(false); setShowApprovedJobs(false); }}
+      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${
+        showCreateJob ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"
+      }`}
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-
-   <div className=" border-gray-200">
-        <button
-    onClick={() => setShowJobs(!showJobs)}
-    className="w-full bg-gradient-to-r from-blue-600 to-indigo-300 hover:from-blue-700 hover:to-indigo-700 text-white cursor-pointer px-4 py-2 rounded-lg font-medium shadow-md flex items-center justify-between"
-  >
-    <span>📋 My Jobs</span>
-    <svg
-      className={`w-4 h-4 transform transition-transform ${showJobs ? "rotate-180" : ""}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
+      ➕ Hire Worker
+    </button>
+    <button
+      onClick={() => { setShowJobs(true); setShowCreateJob(false); setShowApprovedJobs(false); }}
+      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${
+        showJobs ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"
+      }`}
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-
-  {/* My Approved Jobs Button */}
-<button
-  onClick={() => setShowApprovedJobs(!showApprovedJobs)}
-  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-indigo-700 text-white cursor-pointer px-4 py-2 rounded-lg font-medium shadow-md flex items-center justify-between mt-2"
->
-  <span>✅ My Approved Jobs</span>
-  <svg
-    className={`w-4 h-4 transform transition-transform ${showApprovedJobs ? "rotate-180" : ""}`}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-  </svg>
-</button>
-
-        {showJobs && (
-          <div className="mt-4 space-y-3 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {jobs.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-3">
-                No jobs created yet.
-              </p>
-            ) : 
-            (jobs.map((job) => (
-  <div
-    key={job._id}
-    className="bg-white hover:shadow-lg transition rounded-xl p-3 border border-gray-200"
-  >
-    <h3 className="font-semibold text-sm text-blue-700 truncate">{job.title}</h3>
-    <p className="text-xs text-gray-500 font-medium">
-      💰 रु{job.priceRange.initial} - रु{job.priceRange.end}
-    </p>
-
-    <div className="mt-2 flex space-x-2">
-  <button
-    className="flex-1 text-[11px] bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-md shadow-sm cursor-pointer"
-    onClick={() => viewApplications(job._id)}
-  >
-    View Applications
-  </button>
-  <button
-    className="flex-1 text-[11px] bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-md shadow-sm cursor-pointer"
-    onClick={() => setSelectedJob(job)}
-  >
-    More
-  </button>
-<button
-  className={`flex-1 text-[11px] ${
-    deletingJobId === job._id ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
-  } text-white py-1 rounded-md shadow-sm cursor-pointer`}
-  onClick={() => handleDeleteJob(job._id)}
-  disabled={deletingJobId === job._id}
->
-  {deletingJobId === job._id ? (
-    <span className="flex items-center justify-center">
-      <svg className="animate-spin h-3 w-3 mr-1 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6H4z"></path>
-      </svg>
-      Deleting...
-    </span>
-  ) : (
-    "Delete"
-  )}
-</button>
-</div>
-
-   <div className="mt-2 bg-gray-50 border border-blue-800 rounded-md p-2 shadow-inner">
-  <h4 className="text-xs font-semibold mb-2 text-gray-700">
-  Applications ({applications[job._id]?.length ?? job.applications.length})
-</h4>
-
-
-  {/* ✅ Show message if empty */}
-  {(applications[job._id] || job.applications).length === 0 ? (
-     <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
-  <p>No applications received yet.</p>
-  </div>
-) : (
-  (applications[job._id] || job.applications).map((app) => (
-    <div key={app._id}>{app.name}</div>
-  ))
-)}
-
-  {/* ✅ Map applications only if there are some */}
-  {applications[job._id] &&
-    applications[job._id].length > 0 &&
-    applications[job._id].map((app) => (
-      <div
-        key={app._id}
-        className="flex items-center justify-between px-2 py-1 bg-white mb-1 rounded-md"
-      >
-        <div className="border border-blue-400 rounded-xl p-4 mb-3 shadow-sm bg-white hover:shadow-md transition">
-          <div className="flex items-center justify-between">
-            {/* Worker Details */}
-            <div>
-              <h4 className="text-sm font-semibold text-blue-700 flex items-center">
-                👷 {app.appliedBy?.fullName || "N/A"}
-              </h4>
-              <p className="text-xs text-gray-600">📞 {app.appliedBy?.phoneNo || "N/A"}</p>
-              <p className="text-xs text-gray-600">🏠 {app.appliedBy?.address || "N/A"}</p>
-            </div>
-
-            {/* Price */}
-            {app.estimatedPrice && (
-              <div className="text-right">
-                <p className="text-sm font-bold text-blue-600">
-                  रु {app.estimatedPrice} /-
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Message */}
-          {app.message && (
-            <div className="mt-3 text-xs text-gray-700 italic border-l-4 border-blue-300 pl-3 bg-blue-50 rounded">
-              "{app.message}"
-            </div>
-          )}
-        </div>
-
-        <div className="flex space-x-2">
-          {app.isAccepted ? (
-            <span className="text-green-600 text-xs font-semibold">
-              Approved ✅
-            </span>
-          ) : (
-            <button
-              onClick={() => handleApprove(job._id, app._id)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded-md shadow-sm"
-            >
-              Approve
-            </button>
-          )}
-        </div>
-      </div>
-    ))}
-</div>
-
-
-  </div>
-    ))
-     )}
-          </div>
-        )}
-
-        {showApprovedJobs && (
-    <div className="mt-4 space-y-3 max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-      {approvedApps.length === 0 ? (
-        <p className="text-gray-500 text-sm text-center py-3">No approved applications yet.</p>
-      ) : (
-        approvedApps.map((app) => (
-          <div key={app._id} className="bg-white hover:shadow-lg transition rounded-xl p-3 border border-gray-200">
-            <h3 className="font-semibold text-sm text-green-700 truncate">{app.title}</h3>
-            <p className="text-xs text-gray-500 font-medium">💰 रु {app.estimatedPrice}</p>
-            <div className="mt-2 flex flex-col space-y-1">
-              <p>👷 {app.appliedBy?.fullName || "N/A"}</p>
-              <p>📞 {app.appliedBy?.phoneNo || "N/A"}</p>
-              <p>🏠 {app.appliedBy?.address || "N/A"}</p>
-            </div>
-          </div>
-        ))
-      )}
-    </div>
-  )}
-      </div>
-
-  {/* Job Form */}
-  {showCreateJob && (
-  <form
-  onSubmit={handleCreateJob}
-  className="mt-4 bg-white p-5 rounded-xl border border-gray-200 shadow-lg space-y-4 transition-all"
->
-  {/* Two Column Grid */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  {/* Left Column - Job Details */}
-  <div className="space-y-4">
-    <h2 className="text-lg font-semibold text-blue-700 border-b pb-2">
-      📝 Job Details
-    </h2>
-
-    {/* Job Title */}
-    <div>
-      <label className="block text-sm font-medium text-blue-600 mb-1">Job Title</label>
-      <input
-        type="text"
-        placeholder="e.g., Electrician Repair"
-        value={jobForm.title}
-        onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
-        className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        required
-      />
-    </div>
-
-    {/* Category */}
-    <div>
-      <label className="block text-sm font-medium text-blue-600 mb-1">Category</label>
-      <input
-        type="text"
-        placeholder="e.g., Plumber, Cleaner"
-        value={jobForm.category}
-        onChange={(e) => setJobForm({ ...jobForm, category: e.target.value })}
-        className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        required
-      />
-    </div>
-
-    {/* Description */}
-    <div>
-      <label className="block text-sm font-medium text-blue-600 mb-1">Description</label>
-      <textarea
-        placeholder="Describe the job..."
-        value={jobForm.description}
-        onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
-        className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        rows="4"
-        required
-      />
-    </div>
+      📋 My Jobs
+    </button>
+    <button
+      onClick={() => { setShowApprovedJobs(true); setShowJobs(false); setShowCreateJob(false); }}
+      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${
+        showApprovedJobs ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      ✅ Approved Jobs
+    </button>
   </div>
 
-  {/* Right Column - Pricing, Deadline & Address */}
-  <div className="space-y-4">
-    <h2 className="text-lg font-semibold text-blue-700 border-b pb-2">
-      💰 Pricing & Deadline
-    </h2>
+  {/* Tabs Content */}
+  <div className="bg-white p-6 rounded-b-2xl shadow-inner transition-all">
 
-    {/* Min & Max Price */}
-    <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className="block text-sm font-medium text-blue-600 mb-1">Min Price (रु)</label>
-        <input
-          type="number"
-          min="0"
-          step="any"
-          placeholder="0"
-          value={jobForm.priceRange.initial}
-          onChange={(e) => handlePriceChange(e, "initial")}
-          className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-blue-600 mb-1">Max Price (रु)</label>
-        <input
-          type="number"
-          min="0"
-          step="any"
-          placeholder="1000"
-          value={jobForm.priceRange.end}
-          onChange={(e) => handlePriceChange(e, "end")}
-          className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          required
-        />
-      </div>
-    </div>
-
-    {/* Priority & Deadline */}
-    <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className="block text-sm font-medium text-blue-600 mb-1">Priority</label>
-        <select
-          value={jobForm.priority}
-          onChange={(e) => setJobForm({ ...jobForm, priority: e.target.value })}
-          className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          required
+    {/* Hire Worker Form */}
+    {showCreateJob && (
+      <div className="transition-opacity duration-300">
+        {/* Job Form */}
+        <form
+          onSubmit={handleCreateJob}
+          className="mt-4 bg-white p-5 rounded-xl border border-gray-200 shadow-lg space-y-4 transition-all"
         >
-          <option value="">Select</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-blue-700 border-b pb-2">📝 Job Details</h2>
+              <div>
+                <label className="block text-sm font-medium text-blue-600 mb-1">Job Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Electrician Repair"
+                  value={jobForm.title}
+                  onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
+                  className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-600 mb-1">Category</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Plumber, Cleaner"
+                  value={jobForm.category}
+                  onChange={(e) => setJobForm({ ...jobForm, category: e.target.value })}
+                  className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-600 mb-1">Description</label>
+                <textarea
+                  placeholder="Describe the job..."
+                  value={jobForm.description}
+                  onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
+                  className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows="4"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-blue-700 border-b pb-2">💰 Pricing & Deadline</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-blue-600 mb-1">Min Price (रु)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="0"
+                    value={jobForm.priceRange.initial}
+                    onChange={(e) => handlePriceChange(e, "initial")}
+                    className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-blue-600 mb-1">Max Price (रु)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="1000"
+                    value={jobForm.priceRange.end}
+                    onChange={(e) => handlePriceChange(e, "end")}
+                    className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-blue-600 mb-1">Priority</label>
+                  <select
+                    value={jobForm.priority}
+                    onChange={(e) => setJobForm({ ...jobForm, priority: e.target.value })}
+                    className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-blue-600 mb-1">Deadline</label>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    value={jobForm.deadline}
+                    onChange={handleDeadlineChange}
+                    className="border border-gray-300 text-sm rounded-md w-full h-10 px-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-blue-600 mb-1">Address</label>
+                <textarea
+                  placeholder="Enter complete address"
+                  value={jobForm.address}
+                  onChange={(e) => setJobForm({ ...jobForm, address: e.target.value })}
+                  className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows="4"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 rounded-lg font-medium shadow-md transition cursor-pointer"
+          >
+            🚀 Post Job
+          </button>
+        </form>
       </div>
+    )}
 
-     <div>
-      <label className="block text-sm font-medium text-blue-600 mb-1">Deadline</label>
-      <input
-        type="date"
-        min={new Date().toISOString().split("T")[0]}
-        value={jobForm.deadline}
-        onChange={handleDeadlineChange}
-        className="border border-gray-300 text-sm rounded-md w-full h-10 px-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        required
-      />
-    </div>
-    </div>
+    {/* My Jobs */}
+    {showJobs && (
+      <div className="transition-opacity duration-300 space-y-4 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-gray-100">
+        {jobs.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-3">No jobs created yet.</p>
+        ) : (
+          jobs.map((job) => (
+            <div key={job._id} className="bg-white hover:shadow-lg transition rounded-xl p-3 border border-gray-200">
+              <h3 className="font-semibold text-sm text-blue-700 truncate">{job.title}</h3>
+              <p className="text-xs text-gray-500 font-medium">
+                💰 रु{job.priceRange.initial} - रु{job.priceRange.end}
+              </p>
 
-    {/* Address - placed here */}
-   <div>
-  <label className="block text-sm font-medium text-blue-600 mb-1">Address</label>
-  <textarea
-    placeholder="Enter complete address"
-    value={jobForm.address}
-    onChange={(e) => setJobForm({ ...jobForm, address: e.target.value })}
-    className="border border-gray-300 px-3 py-2 text-sm rounded-md w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-    rows="4"
-    required
-  />
-</div>
+              <div className="mt-2 flex space-x-2">
+                <button
+                  className="flex-1 text-[11px] bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-md shadow-sm cursor-pointer"
+                  onClick={() => viewApplications(job._id)}
+                >
+                  View Applications
+                </button>
+                <button
+                  className="flex-1 text-[11px] bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-md shadow-sm cursor-pointer"
+                  onClick={() => setSelectedJob(job)}
+                >
+                  More
+                </button>
+                <button
+                  className={`flex-1 text-[11px] ${
+                    deletingJobId === job._id ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+                  } text-white py-1 rounded-md shadow-sm cursor-pointer`}
+                  onClick={() => handleDeleteJob(job._id)}
+                  disabled={deletingJobId === job._id}
+                >
+                  {deletingJobId === job._id ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin h-3 w-3 mr-1 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6H4z"></path>
+                      </svg>
+                      Deleting...
+                    </span>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+
+              {/* Applications */}
+              <div className="mt-2 bg-gray-50 border border-blue-800 rounded-md p-2 shadow-inner">
+                <h4 className="text-xs font-semibold mb-2 text-gray-700">
+                  Applications ({applications[job._id]?.length ?? job.applications.length})
+                </h4>
+
+                {(applications[job._id] || job.applications).length === 0 ? (
+                  <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
+                    <p>No applications received yet.</p>
+                  </div>
+                ) : (
+                  (applications[job._id] || job.applications).map((app) => (
+                    <div
+                      key={app._id}
+                      className="flex items-center justify-between px-2 py-1 bg-white mb-1 rounded-md"
+                    >
+                      <div className="border border-blue-400 rounded-xl p-4 mb-3 shadow-sm bg-white hover:shadow-md transition">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-sm font-semibold text-blue-700 flex items-center">👷 {app.appliedBy?.fullName || "N/A"}</h4>
+                            <p className="text-xs text-gray-600">📞 {app.appliedBy?.phoneNo || "N/A"}</p>
+                            <p className="text-xs text-gray-600">🏠 {app.appliedBy?.address || "N/A"}</p>
+                          </div>
+                          {app.estimatedPrice && (
+                            <div className="text-right">
+                              <p className="text-sm font-bold text-blue-600">रु {app.estimatedPrice} /-</p>
+                            </div>
+                          )}
+                        </div>
+                        {app.message && (
+                          <div className="mt-3 text-xs text-gray-700 italic border-l-4 border-blue-300 pl-3 bg-blue-50 rounded">
+                            "{app.message}"
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        {app.isAccepted ? (
+                          <span className="text-green-600 text-xs font-semibold">Approved ✅</span>
+                        ) : (
+                          <button
+                            onClick={() => handleApprove(job._id, app._id)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded-md shadow-sm"
+                          >
+                            Approve
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    )}
+
+    {/* Approved Jobs */}
+    {showApprovedJobs && (
+      <div className="transition-opacity duration-300 space-y-4 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-green-300">
+        {approvedApps.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-3">No approved applications yet.</p>
+        ) : (
+          approvedApps.map((job) => (
+            <div key={job._id} className="bg-white rounded-xl p-3 border hover:shadow-lg transition">
+              <h3 className="font-semibold text-green-700">{job.title}</h3>
+              <p className="text-xs text-gray-500">💰 रु {job.estimatedPrice}</p>
+              <div className="mt-2">
+                <p>👷 {job.approvedWorker?.fullName || "N/A"}</p>
+                <p>📞 {job.approvedWorker?.phoneNo || "N/A"}</p>
+                <p>🏠 {job.approvedWorker?.address || "N/A"}</p>
+                {job.message && <p className="italic text-xs mt-1">"{job.message}"</p>}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    )}
 
   </div>
 </div>
-
-  {/* Submit Button - full width */}
-  <button
-    type="submit"
-    className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 rounded-lg font-medium shadow-md transition cursor-pointer"
-  >
-    🚀 Post Job
-  </button>
-</form>
-  )}
-</div>
+{/* till here */}
 
         </div>
       </main>
