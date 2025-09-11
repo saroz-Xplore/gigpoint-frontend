@@ -5,16 +5,22 @@ import {
   FaCogs,
   FaChartPie,
   FaSignOutAlt,
-    FaUsers,
-    FaFilter,
-    FaEnvelope,
-    FaPhone,
-    FaCalendarAlt,
-    FaEye,
-    FaChevronLeft,
-    FaChevronRight,
+  FaUsers,
+  FaFilter,
+  FaEnvelope,
+  FaPhone,
+  FaCalendarAlt,
+  FaEye,
+  FaChevronLeft,
+  FaChevronRight,
   FaSearch,
   FaBriefcase,
+  FaPlayCircle,
+  FaSyncAlt,
+  FaUserTie,
+  FaUserCog,
+  FaUserFriends,
+  FaMoneyBillWave
 } from "react-icons/fa";
 import {
   Chart as ChartJS,
@@ -82,72 +88,67 @@ const AdminDashboard = ({ user, handleLogout }) => {
 
     const fetchStats = async () => {
       try {
-        // Fetch stats from your API
-        const [statsRes, usersRes] = await Promise.all([
-          fetch(`${backendUrl}admin/stats`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }),
-          fetch(`${backendUrl}admin/viewAll?page=1&perPage=1000`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }),
-        ]);
+        const res = await fetch(`${backendUrl}admin/dash`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
 
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats({
-            totalUsers: statsData.totalUsers || 0,
-            totalJobs: statsData.totalJobs || 0,
-            activeJobs: statsData.activeJobs || 0,
-            pendingJobs: statsData.pendingJobs || 0,
-          });
-        }
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            const dashboardData = data.data;
 
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
-
-          // Calculate role distribution from actual user data
-          if (usersData.data && usersData.data.length) {
-            const workers = usersData.data.filter(
-              (user) => user.role === "worker"
-            ).length;
-            const clients = usersData.data.filter(
-              (user) => user.role === "client"
-            ).length;
-            const admins = usersData.data.filter(
-              (user) => user.role === "admin"
-            ).length;
+            setStats({
+              totalUsers: dashboardData.totalUser,
+              totalJobs: dashboardData.totalJobs,
+              activeJobs: dashboardData.activeJobs,
+              ongoingJobs: dashboardData.ongoingJobs,
+              totalTransaction:dashboardData.totalTransaction
+            });
 
             setUserRoleData({
-              workers,
-              clients,
-              admins,
+              workers: dashboardData.totalWorker,
+              customers: dashboardData.totalCustomers,
+              admins: dashboardData.totalAdmin,
             });
           }
         }
       } catch (err) {
-        console.error("Error fetching stats:", err);
-        // Fallback to mock data if API fails
+        console.error("Error fetching dashboard data:", err);
+        // Fallback mock data
         setStats({
-          totalUsers: 1248,
-          totalJobs: 567,
-          activeJobs: 432,
-          pendingJobs: 23,
+          totalUsers: 23,
+          totalJobs: 16,
+          activeJobs: 13,
+          ongoingJobs: 3,
         });
-
         setUserRoleData({
-          workers: 850,
-          clients: 350,
-          admins: 48,
+          workers: 10,
+          customers: 12,
+          admins: 1,
         });
       }
     };
 
     fetchStats();
   }, [activeTab, backendUrl]);
+
+  const doughnutData = {
+    labels: ["Workers", "Customers", "Admins"],
+    datasets: [
+      {
+        label: "User Roles",
+        data: [
+          userRoleData.workers,
+          userRoleData.customers,
+          userRoleData.admins,
+        ],
+        backgroundColor: ["#4caf50", "#2196f3", "#ff9800"],
+        hoverOffset: 10,
+      },
+    ],
+  };
 
   // Fetch Users
   useEffect(() => {
@@ -380,134 +381,89 @@ const AdminDashboard = ({ user, handleLogout }) => {
         <div className="flex-1 p-6 overflow-auto bg-gray-50">
           {/* Overview */}
           {activeTab === "overview" && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Dashboard Overview
+            <div className="p-4 md:p-6 h-screen flex flex-col">
+              <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center md:text-left">
+                Overview
               </h2>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-500 font-medium">Total Users</h3>
-                    <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-                      <FaUsers />
-                    </div>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 flex-shrink-0 mb-6">
+                {/* Total Users */}
+                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
+                  <FaUsers className="text-blue-500 text-3xl mb-2" />
+                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
+                    Total Users
+                  </h3>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">
                     {stats.totalUsers}
                   </p>
-                  <p className="text-sm text-green-600 mt-1">
-                    +12% from last month
-                  </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-500 font-medium">Total Jobs</h3>
-                    <div className="p-3 rounded-lg bg-green-100 text-green-600">
-                      <FaBriefcase />
-                    </div>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-800">
+                {/* Total Jobs */}
+                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
+                  <FaBriefcase className="text-green-500 text-3xl mb-2" />
+                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
+                    Total Jobs
+                  </h3>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">
                     {stats.totalJobs}
                   </p>
-                  <p className="text-sm text-green-600 mt-1">
-                    +8% from last month
-                  </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-500 font-medium">Active Jobs</h3>
-                    <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
-                      <FaProjectDiagram />
-                    </div>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-800">
+                {/* Active Jobs */}
+                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
+                  <FaPlayCircle className="text-purple-500 text-3xl mb-2" />
+                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
+                    Active Jobs
+                  </h3>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">
                     {stats.activeJobs}
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    76% of total jobs
+                </div>
+
+                {/* Ongoing Jobs */}
+                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
+                  <FaSyncAlt className="text-orange-500 text-3xl mb-2" />
+                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
+                    Ongoing Jobs
+                  </h3>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">
+                    {stats.ongoingJobs}
                   </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-500 font-medium">Pending Jobs</h3>
-                    <div className="p-3 rounded-lg bg-red-100 text-red-600">
-                      <FaCogs />
-                    </div>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-800">
-                    {stats.pendingJobs}
+                {/* Total Transactions */}
+                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
+                  <FaMoneyBillWave className="text-indigo-500 text-3xl mb-2" />
+                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
+                    Total Transactions
+                  </h3>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">
+                    ₨ {stats.totalTransaction}
                   </p>
-                  <p className="text-sm text-red-600 mt-1">Needs attention</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <Doughnut
-                    data={userRoleChartData}
-                    options={doughnutOptions}
-                  />
-                </div>
-
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <Bar data={userGrowthData} options={barOptions} />
-                </div>
-              </div>
-
-              {/* User Statistics */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  User Statistics
+              {/* User Roles Doughnut Chart */}
+              <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center flex-shrink-0 max-w-full md:max-w-lg mx-auto">
+                <h3 className="text-lg md:text-xl font-semibold mb-4 text-center flex items-center justify-center gap-2">
+                  <FaUsers className="text-indigo-500" /> User Roles
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="text-blue-600 font-bold text-2xl mb-1">
-                      {userRoleData.workers}
-                    </div>
-                    <div className="text-blue-800 font-medium">Workers</div>
-                    <div className="text-blue-600 text-sm">
-                      {stats.totalUsers
-                        ? `${(
-                            (userRoleData.workers / stats.totalUsers) *
-                            100
-                          ).toFixed(1)}% of total`
-                        : "0%"}
-                    </div>
+                <div className="w-full h-64 md:h-72">
+                  <Doughnut data={doughnutData} />
+                </div>
+                <div className="flex flex-wrap justify-around mt-4 text-sm md:text-base font-medium text-gray-600 w-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FaUserTie className="text-blue-500" /> Admins:{" "}
+                    {userRoleData.admins}
                   </div>
-
-                  <div className="bg-teal-50 p-4 rounded-lg">
-                    <div className="text-teal-600 font-bold text-2xl mb-1">
-                      {userRoleData.clients}
-                    </div>
-                    <div className="text-teal-800 font-medium">Clients</div>
-                    <div className="text-teal-600 text-sm">
-                      {stats.totalUsers
-                        ? `${(
-                            (userRoleData.clients / stats.totalUsers) *
-                            100
-                          ).toFixed(1)}% of total`
-                        : "0%"}
-                    </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <FaUserCog className="text-green-500" /> Workers:{" "}
+                    {userRoleData.workers}
                   </div>
-
-                  <div className="bg-pink-50 p-4 rounded-lg">
-                    <div className="text-pink-600 font-bold text-2xl mb-1">
-                      {userRoleData.admins}
-                    </div>
-                    <div className="text-pink-800 font-medium">Admins</div>
-                    <div className="text-pink-600 text-sm">
-                      {stats.totalUsers
-                        ? `${(
-                            (userRoleData.admins / stats.totalUsers) *
-                            100
-                          ).toFixed(1)}% of total`
-                        : "0%"}
-                    </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <FaUserFriends className="text-orange-500" /> Customers:{" "}
+                    {userRoleData.customers}
                   </div>
                 </div>
               </div>
