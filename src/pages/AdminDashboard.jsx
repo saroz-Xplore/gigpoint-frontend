@@ -20,7 +20,8 @@ import {
   FaUserTie,
   FaUserCog,
   FaUserFriends,
-  FaMoneyBillWave
+  FaMoneyBillWave,
+  FaTrash,
 } from "react-icons/fa";
 import {
   Chart as ChartJS,
@@ -66,6 +67,19 @@ const AdminDashboard = ({ user, handleLogout }) => {
     { id: "jobs", label: "Jobs", icon: <FaProjectDiagram /> },
     { id: "settings", label: "Settings", icon: <FaCogs /> },
   ];
+
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [removeMessage, setRemoveMessage] = useState("");
+  const [removing, setRemoving] = useState(false);
+
+
+  const [showRemoveJobModal, setShowRemoveJobModal] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [removeJobMessage, setRemoveJobMessage] = useState("");
+  const [removingJob, setRemovingJob] = useState(false);
+
+
 
   // Stats for overview
   const [stats, setStats] = useState({
@@ -306,24 +320,23 @@ const AdminDashboard = ({ user, handleLogout }) => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 bg-indigo-800 text-white flex flex-col">
-        <div className="p-6 text-2xl font-bold border-b border-indigo-700 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <FaCogs className="text-sm" />
-          </div>
+      <div className="w-64 bg-gradient-to-b from-blue-100 to-blue-50 text-blue-900 flex flex-col shadow-lg">
+        {/* Header */}
+        <div className="p-6 text-2xl font-bold border-b border-blue-200">
           Admin Panel
         </div>
 
+        {/* Tabs */}
         <ul className="flex-1 mt-6">
           {tabs.map((tab) => (
             <li
               key={tab.id}
-              className={`flex items-center gap-3 px-6 py-3 cursor-pointer rounded-r-lg mb-1 transition-all
-              ${
-                activeTab === tab.id
-                  ? "bg-indigo-700 font-semibold border-l-4 border-white"
-                  : "hover:bg-indigo-700"
-              }`}
+              className={`flex items-center gap-3 px-6 py-3 cursor-pointer rounded-r-full mb-2 transition-all
+        ${
+          activeTab === tab.id
+            ? "bg-blue-400 text-white font-semibold shadow-md"
+            : "hover:bg-blue-200"
+        }`}
               onClick={() => {
                 setActiveTab(tab.id);
                 setPage(1);
@@ -335,34 +348,6 @@ const AdminDashboard = ({ user, handleLogout }) => {
             </li>
           ))}
         </ul>
-
-        <div className="p-6 border-t border-indigo-700">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
-              {user?.profilePicture ? (
-                <img
-                  src={user.profilePicture}
-                  alt={user.fullName}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <FaUser className="text-white" />
-              )}
-            </div>
-            <div className="flex-1 truncate">
-              <p className="font-medium truncate">
-                {user?.fullName || "Admin"}
-              </p>
-              <p className="text-xs text-indigo-200 truncate">Administrator</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-indigo-700 hover:bg-indigo-600 transition-colors text-white font-medium"
-          >
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
       </div>
 
       {/* Main content */}
@@ -381,89 +366,117 @@ const AdminDashboard = ({ user, handleLogout }) => {
         <div className="flex-1 p-6 overflow-auto bg-gray-50">
           {/* Overview */}
           {activeTab === "overview" && (
-            <div className="p-4 md:p-6 h-screen flex flex-col">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center md:text-left">
-                Overview
-              </h2>
-
+            <div className="p-2 md:p-4 h-screen flex flex-col gap-3 bg-gray-50">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 flex-shrink-0 mb-6">
-                {/* Total Users */}
-                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
-                  <FaUsers className="text-blue-500 text-3xl mb-2" />
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
-                    Total Users
-                  </h3>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800">
-                    {stats.totalUsers}
-                  </p>
-                </div>
-
-                {/* Total Jobs */}
-                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
-                  <FaBriefcase className="text-green-500 text-3xl mb-2" />
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
-                    Total Jobs
-                  </h3>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800">
-                    {stats.totalJobs}
-                  </p>
-                </div>
-
-                {/* Active Jobs */}
-                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
-                  <FaPlayCircle className="text-purple-500 text-3xl mb-2" />
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
-                    Active Jobs
-                  </h3>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800">
-                    {stats.activeJobs}
-                  </p>
-                </div>
-
-                {/* Ongoing Jobs */}
-                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
-                  <FaSyncAlt className="text-orange-500 text-3xl mb-2" />
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
-                    Ongoing Jobs
-                  </h3>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800">
-                    {stats.ongoingJobs}
-                  </p>
-                </div>
-
-                {/* Total Transactions */}
-                <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center hover:shadow-lg transition duration-300">
-                  <FaMoneyBillWave className="text-indigo-500 text-3xl mb-2" />
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-1 text-center">
-                    Total Transactions
-                  </h3>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800">
-                    ₨ {stats.totalTransaction}
-                  </p>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 flex-shrink-0">
+                {[
+                  {
+                    icon: (
+                      <FaUsers className="text-blue-500 text-2xl md:text-3xl" />
+                    ),
+                    label: "Total Users",
+                    value: stats.totalUsers,
+                  },
+                  {
+                    icon: (
+                      <FaBriefcase className="text-green-500 text-2xl md:text-3xl" />
+                    ),
+                    label: "Total Jobs",
+                    value: stats.totalJobs,
+                  },
+                  {
+                    icon: (
+                      <FaPlayCircle className="text-purple-500 text-2xl md:text-3xl" />
+                    ),
+                    label: "Active Jobs",
+                    value: stats.activeJobs,
+                  },
+                  {
+                    icon: (
+                      <FaSyncAlt className="text-orange-500 text-2xl md:text-3xl" />
+                    ),
+                    label: "Ongoing Jobs",
+                    value: stats.ongoingJobs,
+                  },
+                  {
+                    icon: (
+                      <FaMoneyBillWave className="text-indigo-500 text-2xl md:text-3xl" />
+                    ),
+                    label: "Transactions",
+                    value: `₨ ${stats.totalTransaction}`,
+                  },
+                ].map((card, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white shadow rounded-xl p-2 md:p-3 flex flex-col items-center justify-center hover:shadow-md transition duration-300"
+                  >
+                    {card.icon}
+                    <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1 text-center">
+                      {card.label}
+                    </h3>
+                    <p className="text-sm md:text-lg font-bold text-gray-800">
+                      {card.value}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              {/* User Roles Doughnut Chart */}
-              <div className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center justify-center flex-shrink-0 max-w-full md:max-w-lg mx-auto">
-                <h3 className="text-lg md:text-xl font-semibold mb-4 text-center flex items-center justify-center gap-2">
-                  <FaUsers className="text-indigo-500" /> User Roles
-                </h3>
-                <div className="w-full h-64 md:h-72">
-                  <Doughnut data={doughnutData} />
+              {/* Bar Graph + Legend */}
+              <div className="bg-white shadow rounded-xl p-3 md:p-4 flex flex-col md:flex-row items-center justify-center gap-3 flex-grow">
+                {/* Bar Graph */}
+                <div className="w-full md:w-4/5 h-64 md:h-72">
+                  <Bar
+                    data={{
+                      labels: ["Admins", "Workers", "Customers"],
+                      datasets: [
+                        {
+                          label: "Users Count",
+                          data: [
+                            userRoleData.admins,
+                            userRoleData.workers,
+                            userRoleData.customers,
+                          ],
+                          backgroundColor: ["#3B82F6", "#10B981", "#F97316"],
+                          borderRadius: 6,
+                          maxBarThickness: 50,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true },
+                      },
+                      scales: {
+                        x: {
+                          grid: { display: false },
+                          ticks: { font: { size: 11 } },
+                        },
+                        y: {
+                          beginAtZero: true,
+                          ticks: { stepSize: 1, font: { size: 11 } },
+                          grid: { drawBorder: false },
+                        },
+                      },
+                    }}
+                  />
                 </div>
-                <div className="flex flex-wrap justify-around mt-4 text-sm md:text-base font-medium text-gray-600 w-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FaUserTie className="text-blue-500" /> Admins:{" "}
-                    {userRoleData.admins}
+
+                {/* Legend */}
+                <div className="flex flex-col gap-2 w-1/5 justify-center md:justify-start text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 bg-blue-500 rounded-sm"></span>{" "}
+                    Admins
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <FaUserCog className="text-green-500" /> Workers:{" "}
-                    {userRoleData.workers}
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 bg-green-500 rounded-sm"></span>{" "}
+                    Workers
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <FaUserFriends className="text-orange-500" /> Customers:{" "}
-                    {userRoleData.customers}
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 bg-orange-500 rounded-sm"></span>{" "}
+                    Customers
                   </div>
                 </div>
               </div>
@@ -613,9 +626,18 @@ const AdminDashboard = ({ user, handleLogout }) => {
                                   {formatDate(user.createdAt)}
                                 </div>
                               </td>
-                              <td className="py-3 px-4">
+                              <td className="py-3 px-4 flex gap-3">
                                 <button className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800">
                                   <FaEye /> View
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setShowRemoveModal(true);
+                                  }}
+                                  className="flex items-center gap-1 text-red-600 hover:text-red-800"
+                                >
+                                  <FaTrash /> Remove
                                 </button>
                               </td>
                             </tr>
@@ -625,6 +647,85 @@ const AdminDashboard = ({ user, handleLogout }) => {
                     </div>
                   )}
                 </>
+              )}
+              {showRemoveModal && selectedUser && (
+                <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
+                  <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4">
+                      Remove {selectedUser.fullName}?
+                    </h2>
+                    <p className="text-gray-600 mb-3">
+                      Please provide a message for the user:
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={removeMessage}
+                      onChange={(e) => setRemoveMessage(e.target.value)}
+                      placeholder="Enter reason..."
+                      className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                    />
+
+                    <div className="mt-4 flex justify-end gap-3">
+                      <button
+                        onClick={() => {
+                          setShowRemoveModal(false);
+                          setSelectedUser(null);
+                          setRemoveMessage("");
+                        }}
+                        className="px-4 py-2 rounded-lg border hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setRemoving(true);
+                          try {
+                            const res = await fetch(
+                              `${backendUrl}admin/removeUser/${selectedUser._id}`,
+                              {
+                                method: "DELETE",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${localStorage.getItem(
+                                    "accessToken"
+                                  )}`,
+                                },
+                                body: JSON.stringify({
+                                  message: removeMessage,
+                                }),
+                              }
+                            );
+
+                            const data = await res.json();
+                            if (res.ok) {
+                              alert("✅ User removed successfully!");
+                              setUsers(
+                                users.filter((u) => u._id !== selectedUser._id)
+                              );
+                              setShowRemoveModal(false);
+                              setRemoveMessage("");
+                            } else {
+                              alert(
+                                `❌ Error: ${
+                                  data.message || "Failed to remove user"
+                                }`
+                              );
+                            }
+                          } catch (err) {
+                            console.error(err);
+                            alert("❌ Something went wrong!");
+                          } finally {
+                            setRemoving(false);
+                          }
+                        }}
+                        disabled={removing}
+                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {removing ? "Removing..." : "Remove"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* Pagination */}
@@ -799,9 +900,19 @@ const AdminDashboard = ({ user, handleLogout }) => {
                             )}
                           </div>
 
-                          <div className="px-5 py-3 bg-gray-50 flex justify-end">
+                          <div className="px-5 py-3 bg-gray-50 flex justify-between">
                             <button className="text-sm text-indigo-600 font-medium hover:text-indigo-800">
                               View Details
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setShowRemoveJobModal(true);
+                                setRemoveJobMessage("");
+                              }}
+                              className="text-sm text-red-600 font-medium hover:text-red-800"
+                            >
+                              Remove
                             </button>
                           </div>
                         </div>
@@ -854,6 +965,83 @@ const AdminDashboard = ({ user, handleLogout }) => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {showRemoveJobModal && selectedJob && (
+            <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Remove Job: {selectedJob.title}
+                </h2>
+                <p className="text-gray-600 mb-3">
+                  Please provide a message for the job owner:
+                </p>
+                <textarea
+                  rows={4}
+                  value={removeJobMessage}
+                  onChange={(e) => setRemoveJobMessage(e.target.value)}
+                  placeholder="Enter reason..."
+                  className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                />
+
+                <div className="mt-4 flex justify-end gap-3">
+                  <button
+                    onClick={() => {
+                      setShowRemoveJobModal(false);
+                      setSelectedJob(null);
+                      setRemoveJobMessage("");
+                    }}
+                    className="px-4 py-2 rounded-lg border hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setRemovingJob(true);
+                      try {
+                        const res = await fetch(
+                          `${backendUrl}admin/removeJob/${selectedJob._id}`,
+                          {
+                            method: "DELETE",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${localStorage.getItem(
+                                "accessToken"
+                              )}`,
+                            },
+                            body: JSON.stringify({ message: removeJobMessage }),
+                          }
+                        );
+
+                        const data = await res.json();
+                        if (res.ok) {
+                          alert("✅ Job removed successfully!");
+                          setJobs(
+                            jobs.filter((j) => j._id !== selectedJob._id)
+                          );
+                          setShowRemoveJobModal(false);
+                          setRemoveJobMessage("");
+                        } else {
+                          alert(
+                            `❌ Error: ${
+                              data.message || "Failed to remove job"
+                            }`
+                          );
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert("❌ Something went wrong!");
+                      } finally {
+                        setRemovingJob(false);
+                      }
+                    }}
+                    disabled={removingJob}
+                    className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {removingJob ? "Removing..." : "Remove"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
