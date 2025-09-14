@@ -34,7 +34,7 @@ import {
   Legend,
 } from "chart.js";
 import { Doughnut, Bar } from "react-chartjs-2";
-
+import { UserCard } from "../components/UserCard";
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -65,7 +65,7 @@ const AdminDashboard = ({ user, handleLogout }) => {
     { id: "overview", label: "Overview", icon: <FaChartPie /> },
     { id: "users", label: "Users", icon: <FaUser /> },
     { id: "jobs", label: "Jobs", icon: <FaProjectDiagram /> },
-    { id: "settings", label: "Settings", icon: <FaCogs /> },
+    { id: "stats", label: "Stats", icon: <FaCogs /> },
   ];
 
   const [showRemoveModal, setShowRemoveModal] = useState(false);
@@ -73,13 +73,10 @@ const AdminDashboard = ({ user, handleLogout }) => {
   const [removeMessage, setRemoveMessage] = useState("");
   const [removing, setRemoving] = useState(false);
 
-
   const [showRemoveJobModal, setShowRemoveJobModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [removeJobMessage, setRemoveJobMessage] = useState("");
   const [removingJob, setRemovingJob] = useState(false);
-
-
 
   // Stats for overview
   const [stats, setStats] = useState({
@@ -118,7 +115,7 @@ const AdminDashboard = ({ user, handleLogout }) => {
               totalJobs: dashboardData.totalJobs,
               activeJobs: dashboardData.activeJobs,
               ongoingJobs: dashboardData.ongoingJobs,
-              totalTransaction:dashboardData.totalTransaction
+              totalTransaction: dashboardData.totalTransaction,
             });
 
             setUserRoleData({
@@ -316,6 +313,46 @@ const AdminDashboard = ({ user, handleLogout }) => {
       },
     },
   };
+
+  //for stats
+
+  const [topWorkers, setTopWorkers] = useState([]);
+  const [topCustomers, setTopCustomers] = useState([]);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  useEffect(() => {
+    if (activeTab !== "stats") return;
+
+    const fetchTopData = async () => {
+      try {
+        const headers = {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        };
+
+        const [workerRes, customerRes] = await Promise.all([
+          fetch(`${backendUrl}admin/topW`, { headers }),
+          fetch(`${backendUrl}admin/topU`, { headers }),
+        ]);
+
+        if (workerRes.ok) {
+          const data = await workerRes.json();
+          setTopWorkers(data.data || []);
+          console.log(data)
+        }
+        if (customerRes.ok) {
+          const data = await customerRes.json();
+          setTopCustomers(data.data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching stats data:", err);
+      }
+    };
+    fetchTopData(); 
+
+    if (!autoRefresh) return;
+
+    const interval = setInterval(fetchTopData, 10000); 
+    return () => clearInterval(interval); 
+  }, [activeTab, backendUrl, autoRefresh]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -1045,85 +1082,89 @@ const AdminDashboard = ({ user, handleLogout }) => {
             </div>
           )}
 
-          {/* Settings */}
-          {activeTab === "settings" && (
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                Settings
-              </h2>
+          {/* Stats */}
+          {activeTab === "stats" && (
+            <div className="h-[calc(100vh-64px)] p-6 flex flex-col">
+              {/* Header */}
+              <h1 className="text-3xl font-bold text-gray-800 mb-6">
+                GigPoint Stats
+              </h1>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 border border-gray-200 rounded-xl">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                    General Settings
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Email Notifications</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          defaultChecked
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Dark Mode</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Auto Refresh</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          defaultChecked
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                      </label>
-                    </div>
+              {/* Main content: Two columns */}
+              <div className="flex flex-1 gap-6 overflow-hidden">
+                {/* Left: Workers */}
+                <div className="flex-1 bg-white p-4 rounded-xl shadow-md border border-gray-100 overflow-y-auto">
+                  <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                    👷 Top Workers
+                  </h2>
+                  <div className="space-y-3">
+                    {topWorkers.length > 0 ? (
+                      topWorkers.map((worker, index) => (
+                        <div
+                          key={worker._id}
+                          className={`flex items-center gap-4 p-3 rounded-lg hover:shadow-md transition
+                  ${
+                    index === 0
+                      ? "bg-indigo-50 border border-indigo-300"
+                      : "border border-gray-100"
+                  }`}
+                        >
+                          <span className="text-lg font-bold w-6 text-gray-700">
+                            {index + 1}
+                          </span>
+                          <UserCard user={worker} type="worker" />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No workers found.</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="p-5 border border-gray-200 rounded-xl">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                    Account Settings
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Name
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue={user?.fullName || "Admin"}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        defaultValue={user?.email || "admin@example.com"}
-                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <button className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                      Save Changes
-                    </button>
+                {/* Right: Customers */}
+                <div className="flex-1 bg-white p-4 rounded-xl shadow-md border border-gray-100 overflow-y-auto">
+                  <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                    🧑‍💼 Top Customers
+                  </h2>
+                  <div className="space-y-3">
+                    {topCustomers.length > 0 ? (
+                      topCustomers.map((customer, index) => (
+                        <div
+                          key={customer._id}
+                          className={`flex items-center gap-4 p-3 rounded-lg hover:shadow-md transition
+                  ${
+                    index === 0
+                      ? "bg-indigo-50 border border-indigo-300"
+                      : "border border-gray-100"
+                  }`}
+                        >
+                          <span className="text-lg font-bold w-6 text-gray-700">
+                            {index + 1}
+                          </span>
+                          <UserCard user={customer} type="customer" />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No customers found.</p>
+                    )}
                   </div>
                 </div>
+              </div>
+
+              {/* Auto-refresh toggle */}
+              <div className="mt-4 bg-white p-4 rounded-xl shadow-md border border-gray-100 flex items-center justify-between w-1/3">
+                <span className="text-gray-700 font-medium">
+                  Auto Refresh Stats
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={autoRefresh}
+                    onChange={() => setAutoRefresh(!autoRefresh)}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
               </div>
             </div>
           )}
