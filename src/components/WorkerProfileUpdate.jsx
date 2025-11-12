@@ -155,11 +155,11 @@ const WorkerProfileUpdate = ({ isWorker = true }) => {
           <p className="text-blue-700 font-bold text-xl">{message}</p>
 
           <button
-            onClick={() => navigate("/worker-dashboard")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md shadow-md transition"
-          >
-            Go to Profile
-          </button>
+          onClick={() => navigate(isWorker ? "/worker-dashboard" : "/user-dashboard")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-md shadow-md transition"
+        >
+          Go to Profile
+        </button>
         </div>
       ) : (
         <form className="space-y-6 text-left" onSubmit={handleSubmit}>
