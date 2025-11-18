@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LeftSidebar from "../components/LifeSidebar";
+import { FaUser, FaPhone, FaHome } from "react-icons/fa";
+import { FaMoneyBillWave, FaTag, FaRegFileAlt, FaMapMarkerAlt, FaClock, FaBolt } from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
@@ -14,10 +17,12 @@ const UserDashboard = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showCreateJob, setShowCreateJob] = useState(false);
   const [deletingJobId, setDeletingJobId] = useState(null);
-  const [approvedApps, setApprovedApps] = useState([]); 
+  const [approvedApps, setApprovedApps] = useState([]);
   const [showApprovedJobs, setShowApprovedJobs] = useState(false);
+  const [confirmJobId, setConfirmJobId] = useState(null);
 
-
+  // NEW: which job's applications are open (toggle mode)
+  const [openJobId, setOpenJobId] = useState(null);
 
   const token = localStorage.getItem("accessToken");
 
@@ -38,7 +43,7 @@ const UserDashboard = () => {
 
   // Fetch user profile
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUser = async () => {
       try {
         const res = await fetch(`${backendUrl}auth/my`, {
           method: "GET",
@@ -66,8 +71,8 @@ const UserDashboard = () => {
         setLoading(false);
       }
     };
-    fetchUserProfile();
-  }, [navigate]);
+    fetchUser();
+  }, [navigate, token]);
 
   // Fetch jobs
   const fetchMyJobs = async () => {
@@ -85,88 +90,84 @@ const UserDashboard = () => {
       console.error("Error fetching jobs:", err);
     }
   };
+
   // Delete job
-const handleDeleteJob = async (jobId) => {
-  if (!window.confirm("Are you sure you want to delete this job?")) return;
+        const handleDeleteJob = async (jobId) => {
+        setDeletingJobId(jobId);
+        try {
+          const res = await fetch(`${backendUrl}job/user/delete/${jobId}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
+            setSuccessMessage("Job deleted successfully");
+            setTimeout(() => setSuccessMessage(""), 4000);
+          } else {
+            console.error("Delete failed:", data);
+          }
+        } catch (err) {
+          console.error("Error deleting job:", err);
+        } finally {
+          setDeletingJobId(null);
+          setConfirmJobId(null);
+        }
+      };
 
-  setDeletingJobId(jobId); // start loading
+  // Approve application (calls backend)
+  const approveApplication = async (jobId, applicationId) => {
+    try {
+      const res = await fetch(`${backendUrl}job/user/approve/${jobId}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ applicationId }),
+      });
 
-  try {
-    const res = await fetch(`${backendUrl}job/user/delete/${jobId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+      const data = await res.json();
 
-    const data = await res.json();
-    console.log("Delete response:", data);
+      if (data.success) {
+        const approvedJob = data.data.job;
+        setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
+        setApprovedApps((prevApproved) => [...prevApproved, approvedJob]);
+      }
 
-    if (res.ok) {
-      setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
-      setSuccessMessage("Job deleted successfully");
+      return data;
+    } catch (err) {
+      console.error("Approval failed:", err);
+      return null;
+    }
+  };
+
+  const handleApprove = async (jobId, appId) => {
+    try {
+      const res = await approveApplication(jobId, appId);
+      if (!res?.data?.job || !res?.data?.application) return;
+
+      const approvedJob = res.data.job;
+      const approvedApp = res.data.application;
+
+      setSuccessMessage("Application Approved Successfully");
       setTimeout(() => setSuccessMessage(""), 4000);
+
+      setApprovedApps((prev) => [
+        ...prev,
+        {
+          _id: approvedJob._id,
+          title: approvedJob.title,
+          estimatedPrice: approvedJob.finalPrice,
+          approvedWorker: approvedJob.assignedTo,
+          message: approvedApp.message,
+        },
+      ]);
+    } catch (err) {
+      console.error("Approval failed:", err);
     }
-  } catch (err) {
-    console.error("Error deleting job:", err);
-  } finally {
-    setDeletingJobId(null); // stop loading
-  }
-};
-
-// Call this function wherever needed
-const approveApplication = async (jobId, applicationId) => {
-  try {
-    const res = await fetch(`${backendUrl}job/user/approve/${jobId}`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ applicationId }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      const approvedJob = data.data.job;
-      setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
-      setApprovedApps((prevApproved) => [...prevApproved, approvedJob]);
-    }
-
-    return data; // ✅ return response here
-  } catch (err) {
-    console.error("Approval failed:", err);
-    return null; // return null if error
-  }
-};
-
-const handleApprove = async (jobId, appId) => {
-  try {
-    const res = await approveApplication(jobId, appId);
-    console.log("response:", res);
-
-    if (!res?.data?.job || !res?.data?.application) return;
-
-    const approvedJob = res.data.job;
-    const approvedApp = res.data.application;
-
-    setSuccessMessage("Application Approved Successfully");
-    setTimeout(() => setSuccessMessage(""), 4000);
-
-    setApprovedApps((prev) => [
-      ...prev,
-      {
-        _id: approvedJob._id,
-        title: approvedJob.title,
-        estimatedPrice: approvedJob.finalPrice,
-        approvedWorker: approvedJob.assignedTo,
-        message: approvedApp.message,
-      },
-    ]);
-  } catch (err) {
-    console.error("Approval failed:", err);
-  }
-};
+  };
 
   // Validate form
   const validateForm = () => {
@@ -186,51 +187,75 @@ const handleApprove = async (jobId, appId) => {
 
   // Create job
   const handleCreateJob = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
 
-    try {
-      const res = await fetch(`${backendUrl}job/user/create`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(jobForm),
-      });
-      if (res.ok) {
-        setJobForm({
-          title: "",
-          description: "",
-          priceRange: { initial: "", end: "" },
-          priority: "",
-          category: "",
-          address: "",
-          deadline: "",
-        });
-        setErrors({});
-        fetchMyJobs();
+  // Validate form first
+  if (!validateForm()) return;
 
-        // ✅ Show success message
-        setSuccessMessage("Your job has been posted successfully");
-        setTimeout(() => setSuccessMessage(""), 4000);
-      }
-    } catch (err) {
-      console.error("Error creating job:", err);
-    }
-  };
+  try {
+    // Prepare payload with numbers for price and formatted deadline
+    const payload = {
+      ...jobForm,
+      priceRange: {
+        initial: parseFloat(jobForm.priceRange.initial),
+        end: parseFloat(jobForm.priceRange.end),
+      },
+      deadline: jobForm.deadline, // already in YYYY-MM-DD format from input
+    };
 
-  // View applications
-  const viewApplications = async (jobId) => {
-    if (applications[jobId]) {
-    setApplications((prev) => {
-      const updated = { ...prev };
-      delete updated[jobId];
-      return updated;
+    const res = await fetch(`${backendUrl}job/user/create`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
-    return;
+
+    const data = await res.json();
+    console.log("Job creation response:", data);
+
+    if (res.ok && data.success) {
+      // Reset form
+      setJobForm({
+        title: "",
+        description: "",
+        priceRange: { initial: "", end: "" },
+        priority: "",
+        category: "",
+        address: "",
+        deadline: "",
+      });
+      setErrors({});
+
+      // Refresh jobs list
+      fetchMyJobs();
+
+      // Show success message
+      setSuccessMessage("Your job has been posted successfully");
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } else {
+      // Show backend error in console
+      console.error("Create job failed:", data.message || data);
+      alert(data.message || "Job creation failed. Check console for details.");
+    }
+  } catch (err) {
+    console.error("Error creating job:", err);
+    alert("An unexpected error occurred. Check console for details.");
   }
+};
+
+
+  // View applications (TOGGLE) — fetch only when opening
+  const viewApplications = async (jobId) => {
+    // if it's already open -> close
+    if (openJobId === jobId) {
+      setOpenJobId(null);
+      return;
+    }
+
+    // else fetch and open
     try {
       const res = await fetch(`${backendUrl}job/user/apply/view/${jobId}`, {
         credentials: "include",
@@ -240,27 +265,26 @@ const handleApprove = async (jobId, appId) => {
         },
       });
       const data = await res.json();
-       let apps = [];
-    if (Array.isArray(data.data.allApplications)) {
-      apps = data.data.allApplications;
-    } else if (data.data.allApplications) {
-      apps = [data.data.allApplications];
-    }
+      let apps = [];
+      if (Array.isArray(data.data.allApplications)) {
+        apps = data.data.allApplications;
+      } else if (data.data.allApplications) {
+        apps = [data.data.allApplications];
+      }
 
-    setApplications((prev) => ({
-      ...prev,
-      [jobId]: apps,
-    }));
-  } catch (err) {
-    console.error("Error fetching applications:", err);
-  }
-};
+      // set apps for job and open it
+      setApplications((prev) => ({ ...prev, [jobId]: apps }));
+      setOpenJobId(jobId);
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+    }
+  };
 
   // Handle deadline change
   const handleDeadlineChange = (e) => {
     const selectedDate = e.target.value;
     setJobForm({ ...jobForm, deadline: selectedDate });
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     if (selectedDate === today) {
       setShowUrgentAlert(true);
       setTimeout(() => setShowUrgentAlert(false), 5000);
@@ -269,7 +293,7 @@ const handleApprove = async (jobId, appId) => {
 
   // Handle price change
   const handlePriceChange = (e, field) => {
-    const value = Math.max(0, e.target.value); // Ensure price is not negative
+    const value = Math.max(0, e.target.value);
     setJobForm({
       ...jobForm,
       priceRange: { ...jobForm.priceRange, [field]: value }
@@ -311,15 +335,9 @@ const handleApprove = async (jobId, appId) => {
 
     {/* Sidebar + My Jobs */}
     <div
-      className={`fixed md:static inset-y-0 left-0 z-40 w-64 transform ${
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-0 transition duration-300 ease-in-out bg-white shadow-md`}
+      className={`fixed md:static inset-y-0 left-0 z-40 w-64 transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 transition duration-300 ease-in-out bg-white shadow-md`}
     >
-      {/* Existing Sidebar */}
       <LeftSidebar worker={user} workinfo={user} isWorker={false} />
-
-      {/* My Jobs Section */}
-     
     </div>
 
     {/* Main Content */}
@@ -363,7 +381,6 @@ const handleApprove = async (jobId, appId) => {
             </div>
           </div>
 
-
           {/* ✅ Job Creation Form */}
       
 <div className="max-w-5xl mx-auto mt-8 bg-gray-50 p-6 rounded-2xl shadow-xl">
@@ -372,25 +389,19 @@ const handleApprove = async (jobId, appId) => {
   <div className="flex border-b border-gray-300 mb-4">
     <button
       onClick={() => { setShowCreateJob(true); setShowJobs(false); setShowApprovedJobs(false); }}
-      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${
-        showCreateJob ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"
-      }`}
+      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${showCreateJob ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"}`}
     >
       ➕ Hire Worker
     </button>
     <button
       onClick={() => { setShowJobs(true); setShowCreateJob(false); setShowApprovedJobs(false); }}
-      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${
-        showJobs ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"
-      }`}
+      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${showJobs ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"}`}
     >
       📋 My Jobs
     </button>
     <button
       onClick={() => { setShowApprovedJobs(true); setShowJobs(false); setShowCreateJob(false); }}
-      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${
-        showApprovedJobs ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"
-      }`}
+      className={`px-6 py-3 rounded-t-xl font-semibold text-sm transition-all ${showApprovedJobs ? "bg-white shadow-md border-t border-l border-r border-gray-300" : "text-gray-500 hover:text-gray-700"}`}
     >
       ✅ Approved Jobs
     </button>
@@ -548,7 +559,7 @@ const handleApprove = async (jobId, appId) => {
                   className="flex-1 text-[11px] bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-md shadow-sm cursor-pointer"
                   onClick={() => viewApplications(job._id)}
                 >
-                  View Applications
+                  {openJobId === job._id ? "Hide Applications" : "View Applications"}
                 </button>
                 <button
                   className="flex-1 text-[11px] bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-md shadow-sm cursor-pointer"
@@ -557,77 +568,78 @@ const handleApprove = async (jobId, appId) => {
                   More
                 </button>
                 <button
-                  className={`flex-1 text-[11px] ${
-                    deletingJobId === job._id ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
-                  } text-white py-1 rounded-md shadow-sm cursor-pointer`}
-                  onClick={() => handleDeleteJob(job._id)}
-                  disabled={deletingJobId === job._id}
-                >
-                  {deletingJobId === job._id ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin h-3 w-3 mr-1 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6H4z"></path>
-                      </svg>
-                      Deleting...
-                    </span>
-                  ) : (
-                    "Delete"
-                  )}
-                </button>
+          className={`flex-1 text-[11px] ${
+            deletingJobId === job._id
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
+          } text-white py-1 rounded-md shadow-sm cursor-pointer`}
+          onClick={() => setConfirmJobId(job._id)}
+          disabled={deletingJobId === job._id}
+        >
+          {deletingJobId === job._id ? "Deleting..." : "Delete"}
+        </button>
+
               </div>
 
-              {/* Applications */}
-              <div className="mt-2 bg-gray-50 border border-blue-800 rounded-md p-2 shadow-inner">
-                <h4 className="text-xs font-semibold mb-2 text-gray-700">
-                  Applications ({applications[job._id]?.length ?? job.applications.length})
-                </h4>
+              {/* Applications: ONLY render when this job is opened */}
+              {openJobId === job._id && (
+                <div className="mt-2 bg-gray-50 border border-blue-800 rounded-md p-2 shadow-inner">
+                  <h4 className="text-xs font-semibold mb-2 text-gray-700">
+                    Applications ({applications[job._id]?.length ?? 0})
+                  </h4>
 
-                {(applications[job._id] || job.applications).length === 0 ? (
-                  <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
-                    <p>No applications received yet.</p>
-                  </div>
-                ) : (
-                  (applications[job._id] || job.applications).map((app) => (
-                    <div
-                      key={app._id}
-                      className="flex items-center justify-between px-2 py-1 bg-white mb-1 rounded-md"
-                    >
-                      <div className="border border-blue-400 rounded-xl p-4 mb-3 shadow-sm bg-white hover:shadow-md transition">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="text-sm font-semibold text-blue-700 flex items-center">👷 {app.appliedBy?.fullName || "N/A"}</h4>
-                            <p className="text-xs text-gray-600">📞 {app.appliedBy?.phoneNo || "N/A"}</p>
-                            <p className="text-xs text-gray-600">🏠 {app.appliedBy?.address || "N/A"}</p>
+                  {(!applications[job._id] || applications[job._id].length === 0) ? (
+                    <div className="mt-2 p-2 text-center text-blue-700 bg-blue-50 border border-blue-300 rounded shadow-sm">
+                      <p>No applications received yet.</p>
+                    </div>
+                  ) : (
+                    applications[job._id].map((app) => (
+                      <div
+                        key={app._id}
+                        className="flex items-center justify-between px-2 py-1 bg-white mb-1 rounded-md"
+                      >
+                        <div className="border border-blue-400 rounded-xl p-4 mb-3 shadow-sm bg-white hover:shadow-md transition">
+                          <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="text-sm font-semibold text-blue-700 flex items-center gap-1">
+                                  <FaUser className="text-gray-600" /> {app.appliedBy?.fullName || "N/A"}
+                                </h4>
+                                <p className="text-xs text-gray-600 flex items-center gap-1">
+                                  <FaPhone className="text-gray-600" /> {app.appliedBy?.phoneNo || "N/A"}
+                                </p>
+                                <p className="text-xs text-gray-600 flex items-center gap-1">
+                                  <FaHome className="text-gray-600" /> {app.appliedBy?.address || "N/A"}
+                                </p>    
+                              </div>
+                            {app.estimatedPrice && (
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-blue-600">रु {app.estimatedPrice} /-</p>
+                              </div>
+                            )}
                           </div>
-                          {app.estimatedPrice && (
-                            <div className="text-right">
-                              <p className="text-sm font-bold text-blue-600">रु {app.estimatedPrice} /-</p>
+                          {app.message && (
+                            <div className="mt-3 text-xs text-gray-700 italic border-l-4 border-blue-300 pl-3 bg-blue-50 rounded">
+                              "{app.message}"
                             </div>
                           )}
                         </div>
-                        {app.message && (
-                          <div className="mt-3 text-xs text-gray-700 italic border-l-4 border-blue-300 pl-3 bg-blue-50 rounded">
-                            "{app.message}"
-                          </div>
-                        )}
+                        <div className="flex space-x-2">
+                          {app.isAccepted ? (
+                            <span className="text-green-600 text-xs font-semibold">Approved ✅</span>
+                          ) : (
+                            <button
+                              onClick={() => handleApprove(job._id, app._id)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded-md shadow-sm"
+                            >
+                              Approve
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex space-x-2">
-                        {app.isAccepted ? (
-                          <span className="text-green-600 text-xs font-semibold">Approved ✅</span>
-                        ) : (
-                          <button
-                            onClick={() => handleApprove(job._id, app._id)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded-md shadow-sm"
-                          >
-                            Approve
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
@@ -644,12 +656,20 @@ const handleApprove = async (jobId, appId) => {
             <div key={job._id} className="bg-white rounded-xl p-3 border hover:shadow-lg transition">
               <h3 className="font-semibold text-green-700">{job.title}</h3>
               <p className="text-xs text-gray-500">💰 रु {job.estimatedPrice}</p>
-              <div className="mt-2">
-                <p>👷 {job.approvedWorker?.fullName || "N/A"}</p>
-                <p>📞 {job.approvedWorker?.phoneNo || "N/A"}</p>
-                <p>🏠 {job.approvedWorker?.address || "N/A"}</p>
-                {job.message && <p className="italic text-xs mt-1">"{job.message}"</p>}
-              </div>
+             <div className="mt-2 space-y-1">
+              <p className="flex items-center gap-1">
+                <FaUser className="text-gray-600" /> {job.approvedWorker?.fullName || "N/A"}
+              </p>
+              <p className="flex items-center gap-1">
+                <FaPhone className="text-gray-600" /> {job.approvedWorker?.phoneNo || "N/A"}
+              </p>
+              <p className="flex items-center gap-1">
+                <FaHome className="text-gray-600" /> {job.approvedWorker?.address || "N/A"}
+              </p>
+              {job.message && (
+                <p className="italic text-xs mt-1">"{job.message}"</p>
+              )}
+            </div>
             </div>
           ))
         )}
@@ -684,39 +704,74 @@ const handleApprove = async (jobId, appId) => {
         <span className="text-blue-600 ml-1">Title:</span> <span className="text-gray-600 gap-1.5 mr-1 ">{selectedJob.title}</span>
       </h2>
 
-
       {/* Price */}
-      <p className="text-sm text-blue-600 font-medium">
-        💵 Price: <span className="text-gray-600 font-semibold">रु {selectedJob.priceRange.initial} - रु {selectedJob.priceRange.end}</span>
+      <p className="text-sm text-blue-600 font-medium flex items-center gap-1">
+        <FaMoneyBillWave className="text-green-600" /> Price: <span className="text-gray-600 font-semibold">रु {selectedJob.priceRange.initial} - रु {selectedJob.priceRange.end}</span>
       </p>
 
       {/* Category */}
-      <p className="text-sm text-gray-600">
-        🏷️ <span className="font-medium text-blue-600">Category:</span> {selectedJob.category}
+      <p className="text-sm text-gray-600 flex items-center gap-1">
+        <FaTag className="text-orange-600" /> <span className="font-medium text-blue-600">Category:</span> {selectedJob.category}
       </p>
 
       {/* Description */}
-      <p className="text-sm text-gray-600">
-        📄 <span className="font-medium text-blue-600">Description:</span> {selectedJob.description}
+      <p className="text-sm text-gray-600 flex items-center gap-1">
+        <FaRegFileAlt className="text-gray-600" /> <span className="font-medium text-blue-600">Description:</span> {selectedJob.description}
       </p>
 
       {/* Address */}
-      <p className="text-sm text-gray-600">
-        📍 <span className="font-medium text-blue-600">Address:</span> {selectedJob.address}
+      <p className="text-sm text-gray-600 flex items-center gap-1">
+        <FaMapMarkerAlt className="text-yellow-600" /> <span className="font-medium text-blue-600">Address:</span> {selectedJob.address}
       </p>
 
       {/* Deadline */}
-      <p className="text-sm text-gray-600">
-        ⏰ <span className="font-medium text-blue-600">Deadline:</span> {new Date(selectedJob.deadline).toLocaleDateString()}
+      <p className="text-sm text-gray-600 flex items-center gap-1">
+        <FaClock className="text-black-600" /> <span className="font-medium text-blue-600">Deadline:</span> {new Date(selectedJob.deadline).toLocaleDateString()}
       </p>
 
       {/* Priority */}
-      <p className="text-sm text-gray-600">
-        ⚡ <span className="font-medium text-blue-600">Priority:</span> {selectedJob.priority.charAt(0).toUpperCase() + selectedJob.priority.slice(1)}
+      <p className="text-sm text-gray-600 flex items-center gap-1">
+        <FaBolt className="text-red-600" /> <span className="font-medium text-blue-600">Priority:</span> {selectedJob.priority.charAt(0).toUpperCase() + selectedJob.priority.slice(1)}
       </p>
     </div>
   </div>
-    )}
+)}
+
+    {/* Confirmation Modal */}
+       {confirmJobId && (
+  <div className="fixed inset-0 flex justify-center items-center bg-black/30 backdrop-blur-sm z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-xs w-full">
+      <p className="mb-6 text-gray-800">
+        Are you sure you want to delete this job?
+      </p>
+      
+      {/* Buttons container */}
+      <div className="flex justify-center gap-4">
+        <button
+          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:bg-gray-400 flex items-center gap-2 justify-center"
+          onClick={() => handleDeleteJob(confirmJobId)}
+          disabled={deletingJobId === confirmJobId}
+        >
+          {deletingJobId === confirmJobId ? "Deleting..." : <><FaCheck /> Yes</>}
+        </button>
+        
+        <button
+          className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 flex items-center gap-2 justify-center"
+          onClick={() => setConfirmJobId(null)}
+        >
+          <FaTimes /> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{/* Success Message */}
+{successMessage && (
+  <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-2 rounded-md shadow-md z-50">
+    {successMessage}
+  </div>
+)}
+
     </div>
   );
 };
