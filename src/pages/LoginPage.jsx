@@ -46,25 +46,34 @@ const handleWorkerLogin = async () => {
       const response = await fetch(`${backendUrl}auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // important
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.data) {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("accessToken", data.data.accessToken);
+        localStorage.setItem("refreshToken", data.data.refreshToken);
+
         const userData = data.data.userLogin;
 
-        // Set user in context
+        // Set user from backend response
         setUser({
           ...userData,
-          role: userData.role || "user",
+          fullName: userData.fullName,
+          role: userData.role, // use actual role from backend
         });
 
         // Redirect based on role
-        if (userData.role === "worker") navigate("/worker-dashboard");
-        else if (userData.role === "admin") navigate("/admin");
-        else navigate("/dashboard");
+        if (userData.role === "worker") {
+          navigate("/worker-dashboard");
+        } else if (userData.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard"); // fallback for normal users
+        }
       } else {
         setErrors({ password: data.message || "Login failed" });
       }
