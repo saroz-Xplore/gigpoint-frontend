@@ -4,12 +4,12 @@ import LeftSidebar from "../components/LifeSidebar";
 import { FaUser, FaPhone, FaHome } from "react-icons/fa";
 import { FaMoneyBillWave, FaTag, FaRegFileAlt, FaMapMarkerAlt, FaClock, FaBolt } from "react-icons/fa";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import { useUser } from "../context/UserContextProvider.jsx";
 
 const backendUrl = import.meta.env.VITE_BASE_URL;
 
 const UserDashboard = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const {user, loading} = useUser();
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
@@ -40,38 +40,6 @@ const UserDashboard = () => {
 
   const navigate = useNavigate();
 
-  // Fetch user profile
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`${backendUrl}auth/my`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        if (!res.ok) {
-          navigate("/login");
-          return;
-        }
-        const data = await res.json();
-        const userData = data.data.User;
-        setUser({
-          ...userData,
-          joinedOn: data.data.JoinedOn,
-          jobPosted: data.data.JobPosted,
-        });
-      } catch (err) {
-        console.error("Error fetching user profile:", err);
-        navigate("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [navigate, token]);
 
   // Fetch jobs
   const fetchMyJobs = async () => {
