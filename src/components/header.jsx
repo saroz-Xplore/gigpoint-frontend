@@ -112,29 +112,48 @@ const SearchBar = ({ user, navigate }) => {
     }
 
     const debounce = setTimeout(async () => {
-      setLoadingJobs(true);
-      try {
-        const res = await fetch(
-          `${backendUrl}job/searchJob?title=${encodeURIComponent(query)}`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }
-        );
-        const data = await res.json();
-        setJobs(data.data?.result || []);
-        setShowResults(true);
-      } catch (err) {
-        console.error(err);
-        setJobs([]);
-      } finally {
-        setLoadingJobs(false);
-      }
-    }, 400);
+  setLoadingJobs(true);
+
+  try {
+    let res;
+
+    if (user?.role === "worker") {
+      // GET → for workers searching jobs
+      res = await fetch(
+        `${backendUrl}job/searchJob?title=${encodeURIComponent(query)}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+    } else {
+      // POST → for users searching workers
+      res = await fetch(`${backendUrl}auth/search`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify({
+          filter: [{ key: "fullName", value: query }],
+        }),
+      });
+    }
+
+    const data = await res.json();
+    setJobs(data.data?.result || []);
+    setShowResults(true);
+  } catch (err) {
+    console.error(err);
+    setJobs([]);
+  } finally {
+    setLoadingJobs(false);
+  }
+}, 400);
 
     return () => clearTimeout(debounce);
   }, [query]);
