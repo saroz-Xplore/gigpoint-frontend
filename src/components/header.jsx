@@ -122,7 +122,7 @@ const SearchBar = ({ user, navigate }) => {
       res = await fetch(
         `${backendUrl}job/searchJob?title=${encodeURIComponent(query)}`,
         {
-          method: "GET",
+          method: "POST",
           credentials: "include",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
