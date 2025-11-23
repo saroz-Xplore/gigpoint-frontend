@@ -7,16 +7,14 @@ export const UserContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const backendUrl = import.meta.env.VITE_BASE_URL;
 
-  // Try to get user from localStorage first
   const getUserFromStorage = () => {
     try {
-      const storedUser = localStorage.getItem('userData');
-      const storedTimestamp = localStorage.getItem('userDataTimestamp');
-      
+      const storedUser = localStorage.getItem("userData");
+      const storedTimestamp = localStorage.getItem("userDataTimestamp");
+
       if (storedUser && storedTimestamp) {
         const timestamp = parseInt(storedTimestamp);
         const now = Date.now();
-        // Use cached data if it's less than 5 minutes old
         if (now - timestamp < 5 * 60 * 1000) {
           return JSON.parse(storedUser);
         }
@@ -29,8 +27,8 @@ export const UserContextProvider = ({ children }) => {
 
   const storeUserInStorage = (userData) => {
     try {
-      localStorage.setItem('userData', JSON.stringify(userData));
-      localStorage.setItem('userDataTimestamp', Date.now().toString());
+      localStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.setItem("userDataTimestamp", Date.now().toString());
     } catch (error) {
       console.error("Error storing user data:", error);
     }
@@ -42,13 +40,16 @@ export const UserContextProvider = ({ children }) => {
       const cachedUser = getUserFromStorage();
       if (cachedUser) {
         setUser(cachedUser);
-        setLoading(false); // Show UI immediately with cached data
+        setLoading(false);
       }
 
       let res = await fetch(`${backendUrl}auth/my`, {
         method: "GET",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Add this
+        },
       });
 
       let data = await res.json();
@@ -58,29 +59,49 @@ export const UserContextProvider = ({ children }) => {
         const refreshRes = await fetch(`${backendUrl}auth/accessToken`, {
           method: "POST",
           credentials: "include",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("refreshToken")}`,
+          },
         });
+
         if (refreshRes.ok) {
-          res = await fetch(`${backendUrl}auth/my`, {
-            method: "GET",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-          });
-          data = await res.json();
+          const refreshData = await refreshRes.json();
+          if (refreshData.data?.accessToken) {
+            localStorage.setItem("accessToken", refreshData.data.accessToken);
+
+            res = await fetch(`${backendUrl}auth/my`, {
+              method: "GET",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${refreshData.data.accessToken}`,
+              },
+            });
+            data = await res.json();
+          }
         } else {
           setUser(null);
-          localStorage.removeItem('userData');
-          localStorage.removeItem('userDataTimestamp');
+          localStorage.removeItem("userData");
+          localStorage.removeItem("userDataTimestamp");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("isLoggedIn");
           return;
         }
       }
 
       let userData = null;
       if (data?.data?.userLogin) {
-        userData = { ...data.data.userLogin, role: data.data.userLogin.role || "user" };
+        userData = {
+          ...data.data.userLogin,
+          role: data.data.userLogin.role || "user",
+        };
       } else if (data?.data?.Worker) {
         userData = { ...data.data.Worker, role: "worker" };
       } else if (data?.data?.User) {
         userData = { ...data.data.User, role: "user" };
+      } else if (data?.data?.user) {
+        userData = { ...data.data.user, role: "user" };
       }
 
       if (userData) {
@@ -88,19 +109,26 @@ export const UserContextProvider = ({ children }) => {
         storeUserInStorage(userData);
       } else {
         setUser(null);
-        localStorage.removeItem('userData');
-        localStorage.removeItem('userDataTimestamp');
+        localStorage.removeItem("userData");
+        localStorage.removeItem("userDataTimestamp");
       }
     } catch (err) {
       console.error("Error fetching user:", err);
-      // Don't clear user on network errors, use cached data if available
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUser();
+    // Only fetch user if we have tokens
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (accessToken && refreshToken) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   return (

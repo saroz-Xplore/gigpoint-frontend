@@ -35,7 +35,7 @@ const ChatBot: React.FC = () => {
 
     try {
       const res = await fetch(
-        "https://gigpoint-backend.onrender.com/ai/myBot",
+        "http://localhost:3000/ai/myBot",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
